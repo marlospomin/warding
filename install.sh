@@ -19,8 +19,7 @@ parted -s -a optimal /dev/sda \
   mklabel gpt \
   mkpart primary fat32 0 512MiB \
   mkpart primary ext4 512MiB 100% \
-  set 1 esp on \
-
+  set 1 esp on
 
 # Setup LVM
 pvcreate /dev/sda2
@@ -45,12 +44,12 @@ pacstrap /mnt base
 genfstab -U /mnt > /mnt/etc/fstab
 
 # Setup chroot clock time and timezone
-arch-chroot /mnt "ln -sf /usr/share/zoneinfo/Brazil/East /etc/localtime"
-arch-chroot /mnt "hwclock --systohc"
+arch-chroot /mnt ln -sf /usr/share/zoneinfo/Brazil/East /etc/localtime
+arch-chroot /mnt hwclock --systohc
 
 # Setup chroot locale
 echo "en_US.UTF-8" > /mnt/etc/locale.gen
-arch-chroot /mnt "locale-gen"
+arch-chroot /mnt locale-gen
 echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
 
 # Setup chroot keymap
@@ -65,29 +64,29 @@ echo "127.0.0.1 localhost
 127.0.1.1 warding.localdomain warding" > /mnt/etc/hosts
 
 # Setup chroot root password
-arch-chroot /mnt "echo -e 'warding\nwarding' | passwd"
+arch-chroot /mnt echo -e "warding\nwarding" | passwd
 
 # Setup chroot mkninitcpio
 sed -i '/^HOOK/s/filesystems/lvm2 filesystems/' /mnt/etc/mkinitcpio.conf
-arch-chroot "mkinitcpio -p linux"
+arch-chroot /mnt mkinitcpio -p linux
 
 # Setup chroot bootloader
-arch-chroot /mnt "bootctl install"
+arch-chroot /mnt bootctl install
 echo "title Warding Linux
 linux /vmlinuz-linux
 initrd /initramfs-linux.img
 options root=/dev/vg0/root rw" > /mnt/boot/loader/entries/warding.conf
 
 # Setup Xorg
-arch-chroot /mnt "pacman -Sy xorg-server"
-arch-chroot /mnt "pacman -Sy xf86-video-intel"
+arch-chroot /mnt pacman -Syy xorg-server
+arch-chroot /mnt pacman -Syy xf86-video-intel
 
 # Setup KDE
-arch-chroot /mnt "pacman -Sy plasma"
+arch-chroot /mnt pacman -Syy plasma
 
 # Setup SDDM
-arch-chroot /mnt "pacman -Sy sddm"
-arch-chroot /mnt "systemctl enable sddm"
+arch-chroot /mnt pacman -Syy sddm
+arch-chroot /mnt systemctl enable sddm
 
 mkdir /mnt/etc/sddm.conf.d
 echo "[Theme]
@@ -98,7 +97,7 @@ User=root" > /mnt/etc/sddm.conf.d/login.conf
 # Setup blackarch repo
 curl https://blackarch.org/strap.sh -o /mnt/tmp/strap.sh
 chmod +x /mnt/tmp/strap.sh
-arch-chroot /mnt "sh /tmp/strap.sh"
+arch-chroot /mnt /tmp/strap.sh
 
 # Finish installation
 umount -R /mnt
