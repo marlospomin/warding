@@ -17,9 +17,10 @@ timedatectl set-timezone Brazil/East
 # Setup disk partitions
 parted -s -a optimal /dev/sda \
   mklabel gpt \
-  mkpart primary fat32 1MiB 512MiB \
+  mkpart primary fat32 0 512MiB \
   mkpart primary ext4 512MiB 100% \
-  set 2 lvm on
+  set 1 esp on \
+
 
 # Setup LVM
 pvcreate /dev/sda2
@@ -38,7 +39,7 @@ mkswap /dev/vg0/swap
 swapon /dev/vg0/swap
 
 # Install base packages
-pacstrap /mnt base base-devel
+pacstrap /mnt base
 
 # Generate fstab entries
 genfstab -U /mnt > /mnt/etc/fstab
