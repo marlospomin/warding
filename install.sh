@@ -78,14 +78,15 @@ initrd /initramfs-linux.img
 options root=/dev/vg0/root rw" > /mnt/boot/loader/entries/warding.conf
 
 # Setup Xorg
-arch-chroot /mnt pacman -Syy xorg-server
-arch-chroot /mnt pacman -Syy xf86-video-intel
+arch-chroot /mnt pacman -Syy xorg-server --noconfirm
+arch-chroot /mnt pacman -Syy xf86-video-intel --noconfirm
 
 # Setup KDE
-arch-chroot /mnt pacman -Syy plasma
+arch-chroot /mnt pacman -Syy plasma --noconfirm
+arch-chroot /mnt pacman -Syy konsole --noconfirm
 
 # Setup SDDM
-arch-chroot /mnt pacman -Syy sddm
+arch-chroot /mnt pacman -Syy sddm --noconfirm
 arch-chroot /mnt systemctl enable sddm
 
 mkdir /mnt/etc/sddm.conf.d
