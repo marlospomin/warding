@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# Missing pacman entries and blackarch's repo
-
 # LVM (Unencrypted)
-
-# Virtualbox REQUIRED configuration (else it won't boot)
 # Turn EFI ON (Might take a minute to boot, don't worry)
 
 # Set default keyboard languange
@@ -38,7 +34,7 @@ mkswap /dev/vg0/swap
 swapon /dev/vg0/swap
 
 # Install base packages
-pacstrap /mnt base
+pacstrap /mnt base base-devel
 
 # Generate fstab entries
 genfstab -U /mnt > /mnt/etc/fstab
@@ -66,24 +62,29 @@ echo "127.0.0.1 localhost
 # Setup chroot root password
 arch-chroot /mnt echo -e "warding\nwarding" | passwd
 
+# Install more dependencies
+arch-chroot /mnt pacman -Sy linux lvm2 mkinitcpio --noconfirm
+
 # Setup chroot mkninitcpio
-sed -i '/^HOOK/s/filesystems/lvm2 filesystems/' /mnt/etc/mkinitcpio.conf
+sed -i '/^HOOK/s/filesystems/sd-lvm2 filesystems/' /mnt/etc/mkinitcpio.conf
 arch-chroot /mnt mkinitcpio -p linux
+
+# Install microcode
+arch-chroot /mnt pacman -Sy intel-ucode
 
 # Setup chroot bootloader
 arch-chroot /mnt bootctl install
 echo "title Warding Linux
 linux /vmlinuz-linux
+initrd /intel-ucode.img
 initrd /initramfs-linux.img
 options root=/dev/vg0/root rw" > /mnt/boot/loader/entries/warding.conf
 
 # Setup Xorg
-arch-chroot /mnt pacman -Syy xorg-server --noconfirm
-arch-chroot /mnt pacman -Syy xf86-video-intel --noconfirm
+arch-chroot /mnt pacman -Sy xorg-server xf86-video-intel --noconfirm
 
 # Setup KDE
-arch-chroot /mnt pacman -Syy plasma --noconfirm
-arch-chroot /mnt pacman -Syy konsole --noconfirm
+arch-chroot /mnt pacman -Syy plasma konsole dolphin --noconfirm
 
 # Setup SDDM
 arch-chroot /mnt pacman -Syy sddm --noconfirm
