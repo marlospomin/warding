@@ -66,11 +66,12 @@ arch-chroot /mnt echo -e "warding\nwarding" | passwd
 arch-chroot /mnt pacman -Sy linux lvm2 mkinitcpio --noconfirm
 
 # Setup chroot mkninitcpio
-sed -i '/^HOOK/s/filesystems/sd-lvm2 filesystems/' /mnt/etc/mkinitcpio.conf
+sed -i '/^HOOK/s/filesystems/lvm2 filesystems/' /mnt/etc/mkinitcpio.conf
 arch-chroot /mnt mkinitcpio -p linux
 
 # Install microcode
-arch-chroot /mnt pacman -Sy intel-ucode
+arch-chroot /mnt pacman -Sy archlinux-keyring --noconfirm
+arch-chroot /mnt pacman -Sy intel-ucode --noconfirm
 
 # Setup chroot bootloader
 arch-chroot /mnt bootctl install
