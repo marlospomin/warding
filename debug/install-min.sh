@@ -79,6 +79,9 @@ initrd /intel-ucode.img
 initrd /initramfs-linux.img
 options root=/dev/vg0/root rw" > /mnt/boot/loader/entries/warding.conf
 
+# Setup networking
+arch-croot /mnt pacman -Sy dhcpcd --noconfirm
+
 # Finish installation
 umount -R /mnt
 reboot

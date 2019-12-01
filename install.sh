@@ -81,6 +81,9 @@ initrd /intel-ucode.img
 initrd /initramfs-linux.img
 options root=/dev/vg0/root rw" > /mnt/boot/loader/entries/warding.conf
 
+# Setup networking
+arch-croot /mnt pacman -Sy dhcpcd --noconfirm
+
 # Setup Xorg
 arch-chroot /mnt pacman -Sy xorg-server xf86-video-intel --noconfirm
 
