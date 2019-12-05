@@ -15,7 +15,8 @@ parted -s -a optimal /dev/sda \
   mklabel gpt \
   mkpart primary fat32 0 512MiB \
   mkpart primary ext4 512MiB 100% \
-  set 1 esp on
+  set 1 esp on \
+  set 2 lvm on
 
 # Setup LVM
 pvcreate /dev/sda2
@@ -83,15 +84,16 @@ options root=/dev/vg0/root rw" > /mnt/boot/loader/entries/warding.conf
 
 # Setup networking
 arch-croot /mnt pacman -Sy dhcpcd --noconfirm
+arch-chroot /mnt systemctl enable dhcpcd
 
 # Setup Xorg
 arch-chroot /mnt pacman -Sy xorg-server xf86-video-intel --noconfirm
 
 # Setup KDE
-arch-chroot /mnt pacman -Syy plasma konsole dolphin --noconfirm
+arch-chroot /mnt pacman -Sy plasma konsole dolphin --noconfirm
 
 # Setup SDDM
-arch-chroot /mnt pacman -Syy sddm --noconfirm
+arch-chroot /mnt pacman -Sy sddm --noconfirm
 arch-chroot /mnt systemctl enable sddm
 
 mkdir /mnt/etc/sddm.conf.d
@@ -101,9 +103,15 @@ echo "[Autologin]
 User=root" > /mnt/etc/sddm.conf.d/login.conf
 
 # Setup blackarch repo
-curl https://blackarch.org/strap.sh -o /mnt/tmp/strap.sh
-chmod +x /mnt/tmp/strap.sh
-arch-chroot /mnt /tmp/strap.sh
+arch-chroot /mnt wget -qO- https://blackarch.org/strap.sh | sh
+
+# Install customizations
+arch-chroot /mnt pacman -Sy kvantum-qt5 --noconfirm
+arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/PapirusDevelopmentTeam/arc-kde/master/install.sh | sh
+arch-chroot /mnt wget -qO- https://git.io/papirus-icon-theme-install | sh
+
+# Install basic tools
+arch-chroot /mnt pacman -S openbsd-netcat nmap nano whois go ruby wget openvpn firefox atom hashcat john --noconfirm
 
 # Finish installation
 umount -R /mnt
