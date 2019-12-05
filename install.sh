@@ -83,7 +83,7 @@ initrd /initramfs-linux.img
 options root=/dev/vg0/root rw" > /mnt/boot/loader/entries/warding.conf
 
 # Setup networking
-arch-croot /mnt pacman -Sy dhcpcd --noconfirm
+arch-chroot /mnt pacman -Sy dhcpcd --noconfirm
 arch-chroot /mnt systemctl enable dhcpcd
 
 # Setup Xorg
