@@ -111,7 +111,7 @@ arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/PapirusDevelopmentT
 arch-chroot /mnt wget -qO- https://git.io/papirus-icon-theme-install | sh
 
 # Install basic tools
-arch-chroot /mnt pacman -S openbsd-netcat nmap nano whois go ruby wget openvpn firefox atom hashcat john --noconfirm
+arch-chroot /mnt pacman -S openbsd-netcat nmap nano whois go ruby wget openvpn firefox atom hashcat john git jre-openjdk-headless php --noconfirm
 
 # Finish installation
 umount -R /mnt
