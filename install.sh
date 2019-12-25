@@ -4,7 +4,7 @@
 # Turn EFI ON (Might take a minute to boot, don't worry)
 
 # Set default keyboard languange
-loadkeys br-abnt2
+loadkeys us
 
 # Enable automatic clock time and timezone
 timedatectl set-ntp true
@@ -50,7 +50,7 @@ arch-chroot /mnt locale-gen
 echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
 
 # Setup chroot keymap
-echo "KEYMAP=br-abnt2" > /mnt/etc/vconsole.conf
+echo "KEYMAP=us" > /mnt/etc/vconsole.conf
 
 # Setup chroot hostname
 echo "warding" > /mnt/etc/hostname
@@ -111,7 +111,16 @@ arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/PapirusDevelopmentT
 arch-chroot /mnt wget -qO- https://git.io/papirus-icon-theme-install | sh
 
 # Install basic tools
-arch-chroot /mnt pacman -S openbsd-netcat nmap nano whois go ruby wget openvpn firefox atom hashcat john git jre-openjdk-headless php --noconfirm
+arch-chroot /mnt pacman -S openbsd-netcat nmap nano go ruby wget openvpn firefox atom hashcat john git jre-openjdk-headless php unzip openssh burpsuite metasploit gunzip wfuzz gobuster impacket enum4linux nikto exploitdb sqlmap binwalk bettercap responder nishang powersploit samba proxychains-ng --noconfirm
+
+# Setup bash aliases
+echo "alias l='ls'
+alias ll='ls -la'
+alias lls='ls -lsah'
+alias server='python3 -m http.server'" > /mnt/root/.bash_aliases
+
+# Setup post-install notes
+echo "Don't forget to configure your packages, stuff won't work properly until you do so." > /mnt/root/Desktop/todo.txt
 
 # Finish installation
 umount -R /mnt
