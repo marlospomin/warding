@@ -111,13 +111,10 @@ arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/PapirusDevelopmentT
 arch-chroot /mnt wget -qO- https://git.io/papirus-icon-theme-install | sh
 
 # Install basic tools
-arch-chroot /mnt pacman -S openbsd-netcat nmap nano go ruby wget openvpn firefox atom hashcat john git jre-openjdk-headless php unzip openssh burpsuite metasploit gunzip wfuzz gobuster impacket enum4linux nikto exploitdb sqlmap binwalk bettercap responder nishang powersploit samba proxychains-ng --noconfirm
+arch-chroot /mnt pacman -S openbsd-netcat nmap nano go ruby wget openvpn firefox atom hashcat john git jre-openjdk-headless php unzip openssh burpsuite metasploit gunzip wfuzz gobuster impacket enum4linux nikto exploitdb sqlmap binwalk bettercap responder nishang powersploit samba proxychains-ng zsh --noconfirm
 
-# Setup bash aliases
-echo "alias l='ls'
-alias ll='ls -la'
-alias lls='ls -lsah'
-alias server='python3 -m http.server'" > /mnt/root/.bash_aliases
+# Setup zsh
+arch-chroot /mnt sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
 # Setup post-install notes
 echo "Don't forget to configure your packages, stuff won't work properly until you do so." > /mnt/root/Desktop/todo.txt
