@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# LVM (Unencrypted)
-# Turn EFI ON (Might take a minute to boot, don't worry)
+# LVM (Unencrypted) / Turn EFI ON (Might take a minute to boot, don't worry)
 
 # Set default keyboard languange
 loadkeys us
@@ -21,7 +20,7 @@ parted -s -a optimal /dev/sda \
 # Setup LVM
 pvcreate /dev/sda2
 vgcreate vg0 /dev/sda2
-lvcreate -L 2G vg0 -n swap
+lvcreate -L 4G vg0 -n swap
 lvcreate -l 100%FREE vg0 -n root
 
 mkfs.ext4 /dev/vg0/root
@@ -90,7 +89,10 @@ arch-chroot /mnt systemctl enable dhcpcd
 arch-chroot /mnt pacman -Sy xorg-server xf86-video-intel --noconfirm
 
 # Setup KDE
-arch-chroot /mnt pacman -Sy plasma konsole dolphin --noconfirm
+arch-chroot /mnt pacman -Sy plasma konsole dolphin kmix --noconfirm
+
+# Setup pulseaudio
+arch-chroot /mnt pacman -Sy pulseaudio --noconfirm
 
 # Setup SDDM
 arch-chroot /mnt pacman -Sy sddm --noconfirm
@@ -111,7 +113,7 @@ arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/PapirusDevelopmentT
 arch-chroot /mnt wget -qO- https://git.io/papirus-icon-theme-install | sh
 
 # Install basic tools
-arch-chroot /mnt pacman -S openbsd-netcat nmap nano go ruby wget openvpn firefox atom hashcat john git jre-openjdk-headless php unzip openssh burpsuite metasploit gunzip wfuzz gobuster impacket enum4linux nikto exploitdb sqlmap binwalk bettercap responder nishang powersploit samba proxychains-ng zsh --noconfirm
+arch-chroot /mnt pacman -Sy openbsd-netcat nmap nano go ruby wget openvpn firefox atom hashcat john git jre-openjdk-headless php unzip openssh burpsuite metasploit gunzip wfuzz gobuster impacket enum4linux nikto exploitdb sqlmap binwalk bettercap responder nishang powersploit samba proxychains-ng zsh --noconfirm
 
 # Setup zsh
 arch-chroot /mnt sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
