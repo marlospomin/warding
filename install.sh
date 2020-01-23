@@ -15,7 +15,9 @@ parted -s -a optimal /dev/sda \
   mkpart primary fat32 0 512MiB \
   mkpart primary ext4 512MiB 100% \
   set 1 esp on \
-  set 2 lvm on
+  name 1 'EFI System' \
+  set 2 lvm on \
+  name 2 'Linux LVM'
 
 # Setup LVM
 pvcreate /dev/sda2
@@ -104,6 +106,9 @@ Current=breeze" > /mnt/etc/sddm.conf.d/theme.conf
 echo "[Autologin]
 User=root" > /mnt/etc/sddm.conf.d/login.conf
 
+# Setup tool requirements
+arch-chroot /mnt pacman -Sy wget curl git --noconfirm
+
 # Setup blackarch repo
 arch-chroot /mnt wget -qO- https://blackarch.org/strap.sh | sh
 
@@ -113,7 +118,7 @@ arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/PapirusDevelopmentT
 arch-chroot /mnt wget -qO- https://git.io/papirus-icon-theme-install | sh
 
 # Install basic tools
-arch-chroot /mnt pacman -Sy openbsd-netcat nmap nano go ruby wget openvpn firefox atom hashcat john git jre-openjdk-headless php unzip openssh burpsuite metasploit gunzip wfuzz gobuster impacket enum4linux nikto exploitdb sqlmap binwalk bettercap responder nishang powersploit samba proxychains-ng zsh --noconfirm
+arch-chroot /mnt pacman -Sy openbsd-netcat nmap nano go ruby openvpn firefox atom hashcat john git jre-openjdk-headless php unzip openssh burpsuite metasploit gunzip wfuzz gobuster impacket enum4linux nikto exploitdb sqlmap binwalk bettercap responder nishang powersploit samba proxychains-ng zsh --noconfirm
 
 # Setup zsh
 arch-chroot /mnt sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
