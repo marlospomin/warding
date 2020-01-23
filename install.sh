@@ -16,8 +16,8 @@ parted -s -a optimal /dev/sda \
   mkpart primary ext4 512MiB 100% \
   set 1 esp on \
   name 1 'EFI System' \
-  set 2 lvm on \
-  name 2 'Linux LVM'
+  name 2 'Linux LVM' \
+  set 2 lvm on
 
 # Setup LVM
 pvcreate /dev/sda2
@@ -34,6 +34,9 @@ mount /dev/sda1 /mnt/boot
 
 mkswap /dev/vg0/swap
 swapon /dev/vg0/swap
+
+# Update keyring
+pacman -Sy archlinux-keyring --noconfirm
 
 # Install base packages
 pacstrap /mnt base base-devel
@@ -72,8 +75,7 @@ sed -i '/^HOOK/s/filesystems/lvm2 filesystems/' /mnt/etc/mkinitcpio.conf
 arch-chroot /mnt mkinitcpio -p linux
 
 # Install microcode
-arch-chroot /mnt pacman -Sy archlinux-keyring --noconfirm
-arch-chroot /mnt pacman -Sy intel-ucode --noconfirm
+arch-chroot /mnt pacman -Sy archlinux-keyring intel-ucode --noconfirm
 
 # Setup chroot bootloader
 arch-chroot /mnt bootctl install
@@ -92,9 +94,6 @@ arch-chroot /mnt pacman -Sy xorg-server xf86-video-intel --noconfirm
 
 # Setup KDE
 arch-chroot /mnt pacman -Sy plasma konsole dolphin kmix --noconfirm
-
-# Setup pulseaudio
-arch-chroot /mnt pacman -Sy pulseaudio --noconfirm
 
 # Setup SDDM
 arch-chroot /mnt pacman -Sy sddm --noconfirm
@@ -118,7 +117,7 @@ arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/PapirusDevelopmentT
 arch-chroot /mnt wget -qO- https://git.io/papirus-icon-theme-install | sh
 
 # Install basic tools
-arch-chroot /mnt pacman -Sy openbsd-netcat nmap nano go ruby openvpn firefox atom hashcat john git jre-openjdk-headless php unzip openssh burpsuite metasploit gunzip wfuzz gobuster impacket enum4linux nikto exploitdb sqlmap binwalk bettercap responder nishang powersploit samba proxychains-ng zsh --noconfirm
+arch-chroot /mnt pacman -Sy openbsd-netcat nmap nano go ruby openvpn firefox atom hashcat john jre-openjdk-headless php unzip openssh metasploit impacket exploitdb sqlmap samba proxychains-ng zsh --noconfirm
 
 # Setup zsh
 arch-chroot /mnt sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
