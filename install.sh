@@ -11,10 +11,8 @@ parted -s -a optimal /dev/sda \
   mklabel gpt \
   mkpart primary fat32 0 512MiB \
   set 1 esp on \
-  name 1 "EFI System" \
   mkpart primary ext4 512MiB 100% \
-  set 2 lvm on \
-  name 2 "Linux LVM"
+  set 2 lvm on
 
 # Setup LVM
 pvcreate /dev/sda2
