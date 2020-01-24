@@ -2,9 +2,6 @@
 
 # LVM (Unencrypted) / Turn EFI ON (Might take a minute to boot, don't worry)
 
-# Set default keyboard languange
-loadkeys us
-
 # Enable automatic clock time and timezone
 timedatectl set-ntp true
 timedatectl set-timezone Brazil/East
@@ -13,11 +10,11 @@ timedatectl set-timezone Brazil/East
 parted -s -a optimal /dev/sda \
   mklabel gpt \
   mkpart primary fat32 0 512MiB \
-  mkpart primary ext4 512MiB 100% \
   set 1 esp on \
-  name 1 'EFI System' \
-  name 2 'Linux LVM' \
-  set 2 lvm on
+  name 1 "EFI System" \
+  mkpart primary ext4 512MiB 100% \
+  set 2 lvm on \
+  name 2 "Linux LVM"
 
 # Setup LVM
 pvcreate /dev/sda2
@@ -67,15 +64,15 @@ echo "127.0.0.1 localhost
 # Setup chroot root password
 arch-chroot /mnt echo -e "warding\nwarding" | passwd
 
-# Install more dependencies
-arch-chroot /mnt pacman -Sy linux lvm2 mkinitcpio --noconfirm
+# Install linux kernel
+arch-chroot /mnt pacman -Sy archlinux-keyring linux lvm2 mkinitcpio --noconfirm
 
 # Setup chroot mkninitcpio
 sed -i '/^HOOK/s/filesystems/lvm2 filesystems/' /mnt/etc/mkinitcpio.conf
 arch-chroot /mnt mkinitcpio -p linux
 
 # Install microcode
-arch-chroot /mnt pacman -Sy archlinux-keyring intel-ucode --noconfirm
+arch-chroot /mnt pacman -Sy intel-ucode --noconfirm
 
 # Setup chroot bootloader
 arch-chroot /mnt bootctl install
@@ -85,42 +82,30 @@ initrd /intel-ucode.img
 initrd /initramfs-linux.img
 options root=/dev/vg0/root rw" > /mnt/boot/loader/entries/warding.conf
 
-# Setup networking
-arch-chroot /mnt pacman -Sy dhcpcd --noconfirm
-arch-chroot /mnt systemctl enable dhcpcd
+# Install packages
+arch-chroot /mnt pacman -Sy dhcpcd xorg-server xf86-video-intel plasma konsole dolphin kmix sddm wget git kvantum-qt5 szh --noconfirm
 
-# Setup Xorg
-arch-chroot /mnt pacman -Sy xorg-server xf86-video-intel --noconfirm
-
-# Setup KDE
-arch-chroot /mnt pacman -Sy plasma konsole dolphin kmix --noconfirm
-
-# Setup SDDM
-arch-chroot /mnt pacman -Sy sddm --noconfirm
-arch-chroot /mnt systemctl enable sddm
-
+# Update sddm conf
 mkdir /mnt/etc/sddm.conf.d
 echo "[Theme]
 Current=breeze" > /mnt/etc/sddm.conf.d/theme.conf
 echo "[Autologin]
 User=root" > /mnt/etc/sddm.conf.d/login.conf
 
-# Setup tool requirements
-arch-chroot /mnt pacman -Sy wget curl git --noconfirm
+# Enable services
+arch-chroot /mnt systemctl enable dhcpcd
+arch-chroot /mnt systemctl enable sddm
 
 # Setup blackarch repo
 arch-chroot /mnt wget -qO- https://blackarch.org/strap.sh | sh
 
 # Install customizations
-arch-chroot /mnt pacman -Sy kvantum-qt5 --noconfirm
 arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/PapirusDevelopmentTeam/arc-kde/master/install.sh | sh
+arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh
 arch-chroot /mnt wget -qO- https://git.io/papirus-icon-theme-install | sh
 
 # Install basic tools
-arch-chroot /mnt pacman -Sy openbsd-netcat nmap nano go ruby openvpn firefox atom hashcat john jre-openjdk-headless php unzip openssh metasploit impacket exploitdb sqlmap samba proxychains-ng zsh --noconfirm
-
-# Setup zsh
-arch-chroot /mnt sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+arch-chroot /mnt pacman -Sy openbsd-netcat nmap go ruby openvpn firefox atom hashcat john jre-openjdk-headless php unzip openssh samba proxychains-ng --noconfirm
 
 # Setup post-install notes
 echo "Don't forget to configure your packages, stuff won't work properly until you do so." > /mnt/root/Desktop/todo.txt
