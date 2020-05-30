@@ -94,7 +94,7 @@ function setup_chroot() {
 
 function install_default_packages() {
   # Install packages
-  arch-chroot /mnt pacman -S make fuse automake cmake gcc autoconf openbsd-netcat dhcpcd samba openssh openvpn unzip gunzip vim xorg-server xf86-video-intel plasma konsole dolphin kmix sddm wget git kvantum-qt5 szh --noconfirm
+  arch-chroot /mnt pacman -S make nano fuse wget automake cmake gcc autoconf openbsd-netcat dhcpcd samba openssh openvpn unzip vim xorg-server xf86-video-intel plasma konsole dolphin kmix sddm wget git kvantum-qt5 zsh --noconfirm
 
   # Update sddm conf
   mkdir /mnt/etc/sddm.conf.d
@@ -122,12 +122,11 @@ function install_eye_candy() {
 
 function install_tools() {
   # Install basic tools
-  arch-chroot /mnt pacman -S nmap impacket go ruby php firefox atom hashcat john jre-openjdk-headless proxychains-ng burpsuite crunch enum4linux exploitdb httpie metasploit net-snmp bind-tools radare2 sqlmap smbmap ffuf wfuzz wpscan wireshark xclip  --noconfirm
+  arch-chroot /mnt pacman -S nmap impacket go ruby php firefox atom hashcat john jre-openjdk proxychains-ng exploitdb httpie metasploit bind-tools radare2 sqlmap wpscan xclip  --noconfirm
   # Setup wordlists
   arch-chroot /mnt mkdir -p /usr/share/wordlists
   arch-chroot /mnt wget -q https://github.com/danielmiessler/SecLists/raw/master/Passwords/Leaked-Databases/rockyou.txt.tar.gz -O /usr/share/wordlists/rockyou.txt.tar.gz
-  arch-chroot /mnt wget -q https://github.com/danielmiessler/SecLists/raw/master/Discovery/Web-Content/common.txt -O /usr/share/wordlists/dirb.txt
-  arch-chroot /mnt cp /usr/share/wfuzz/wordlists/general/common.txt /usr/share/wordlists
+  arch-chroot /mnt wget -q https://github.com/danielmiessler/SecLists/raw/master/Discovery/Web-Content/common.txt -O /usr/share/wordlists/common.txt
 }
 
 function finish() {
@@ -144,7 +143,7 @@ setup_chroot
 install_default_packages
 
 # Argument parsing
-while getopts "et:" opt; do
+while getopts "et" opt; do
   case "$opt" in
   e)
     install_eye_candy
