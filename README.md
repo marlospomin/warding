@@ -22,7 +22,7 @@ By default the script will not install any theme, icons or tools. To enable that
 ./install -et
 ```
 
-Enjoy.
+And that's it.
 
 ## License
 
