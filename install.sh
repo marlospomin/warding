@@ -15,7 +15,7 @@ function setup_drives() {
   # Setup disk partitions
   parted -s -a optimal /dev/sda \
     mklabel gpt \
-    mkpart primary fat32 0 512MiB \
+    mkpart primary fat32 0% 512MiB \
     set 1 esp on \
     mkpart primary ext4 512MiB 100% \
     set 2 lvm on
