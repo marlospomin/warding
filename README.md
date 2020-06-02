@@ -17,9 +17,9 @@ By default the script will not install any theme, icons or tools. To enable that
 
 ```bash
 # Install tools only, leaving theming for yourself
-./install -t
+./install.sh -t
 # Install everything
-./install -et
+./install.sh -et
 ```
 
 And that's it.
