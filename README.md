@@ -1,6 +1,6 @@
 # Warding
 
-> Arch Linux variant designed for security assessments and pentesting.
+> Custom Arch Linux designed for security assessments and pentesting.
 
 ## Install
 
