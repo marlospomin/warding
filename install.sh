@@ -6,7 +6,7 @@
 #
 
 function setup_mirrors() {
-  pacman -Sy reflector --no-confirm
+  pacman -Sy reflector --noconfirm
   reflector --latest 25 --sort rate --save /etc/pacman.d/mirrorlist
 }
 
