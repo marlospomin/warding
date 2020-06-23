@@ -5,6 +5,11 @@
 # Author: p7r0bl4s7
 #
 
+function setup_mirrors() {
+  pacman -Sy reflector --no-confirm
+  reflector --latest 25 --sort rate --save /etc/pacman.d/mirrorlist
+}
+
 function set_timezone() {
   # Enable automatic clock time and timezone
   timedatectl set-ntp true
@@ -40,7 +45,7 @@ function setup_drives() {
 
 function install_base() {
   # Update keyring
-  pacman -Sy archlinux-keyring --noconfirm
+  pacman -S archlinux-keyring --noconfirm
 
   # Install base packages
   pacstrap /mnt base base-devel
@@ -136,6 +141,7 @@ function finish() {
 }
 
 # Script chain
+setup_mirrors
 set_timezone
 setup_drives
 install_base
