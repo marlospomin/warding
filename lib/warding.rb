@@ -89,133 +89,145 @@ module Warding
     def install(data)
       if @@prompt.yes?('Confirm settings and continue?')
 
-        # setup mirrorlist
+        @@prompt.say("Installing, please wait...")
 
-        if data[:update_mirrors]
+        def setup_mirrors
           `reflector --latest 25 --sort rate --save /etc/pacman.d/mirrorlist`
         end
 
-        # setup timezone
+        setup_mirrors if data[:update_mirrors]
 
-        `timedatectl set-ntp true`
-
-        if data[:update_timezone]
-          `timedatectl set-timezone #{data[:update_timezone]}`
-        else
-          `timedatectl set-timezone "$(curl --fail https://ipapi.co/timezone)"`
+        def setup_timezone(timezone)
+          `timedatectl set-ntp true`
+          if timezone
+            `timedatectl set-timezone #{timezone}`
+          else
+            `timedatectl set-timezone "$(curl --fail https://ipapi.co/timezone)"`
+          end
         end
 
-        # setup paritions
+        data[:update_timezone] ? setup_timezone(data[:update_timezone]) : setup_timezone
 
-        `parted -s -a optimal /dev/sda \
-          mklabel gpt \
-          mkpart primary fat32 0% #{data[:system_settings][:boot_size]}Mib \
-          set 1 esp on \
-          mkpart primary ext4 #{data[:system_settings][:boot_size]}Mib 100% \
-          set 2 lvm on
-        `
+        def setup_partitions(boot_size)
+          `parted -s -a optimal /dev/sda \
+            mklabel gpt \
+            mkpart primary fat32 0% #{boot_size}Mib \
+            set 1 esp on \
+            mkpart primary ext4 #{boot_size}Mib 100% \
+            set 2 lvm on
+          `
+        end
 
-        `pvcreate /dev/sda2`
-        `vgcreate vg0 /dev/sda2`
-        `lvcreate -L #{data[:system_settings][:swap_size]}Mib vg0 -n swap`
-        `lvcreate -L #{data[:system_settings[:home_size]]}Mib vg0 -n home` if data[:system_settings][:partition] == '/boot, /root and /home'
-        `lvcreate -l 100%FREE vg0 -n root`
+        setup_partitions(data[:system_settings][:boot_size])
 
-        `mkfs.ext4 /dev/vg0/root`
-        `mount /dev/vg0/root /mnt`
+        def setup_lvm(scheme, swap_size, home_size=false)
+          `pvcreate /dev/sda2`
+          `vgcreate vg0 /dev/sda2`
+          `lvcreate -L #{swap_size}Mib vg0 -n swap`
+          if scheme == '/boot, /root and /home'
+            `lvcreate -L #{home_size}Mib vg0 -n home`
+          end
+          `lvcreate -l 100%FREE vg0 -n root`
+
+          `mkfs.ext4 /dev/vg0/root`
+          `mount /dev/vg0/root /mnt`
+
+          if scheme == '/boot, /root and /home'
+            `mkfs.ext4 /dev/vg0/home`
+            `mount /dev/vg0/home /mnt/home`
+          end
+
+          `mkfs.fat -F32 /dev/sda1`
+          `mkdir /mnt/boot`
+          `mount /dev/sda1 /mnt/boot`
+
+          `mkswap /dev/vg0/swap`
+          `swapon /dev/vg0/swap`
+        end
 
         if data[:system_settings][:partition] == '/boot, /root and /home'
-          `mkfs.ext4 /dev/vg0/home`
-          `mount /dev/vg0/home /mnt/home`
+          setup_lvm(data[:system_settings][:partition], data[:system_settings][:swap_size], data[:system_settings[:home_size]])
+        else
+          setup_lvm(data[:system_settings][:partition], data[:system_settings][:swap_size])
         end
-
-        `mkfs.fat -F32 /dev/sda1`
-        `mkdir /mnt/boot`
-
-        `mkswap /dev/vg0/swap`
-        `swapon /dev/vg0/swap`
 
         # setup encryption
-
         # TODO: everything
 
-        # setup base packages
-
-        `pacman -Sy`
-        `pacstrap /mnt base base-devel`
-        `genfstab -U /mnt >> /mnt/etc/fstab`
-
-        # setup chroot
-
-        `arch-chroot /mnt ln -sf /usr/share/zoneinfo/"$(curl --fail https://ipapi.co/timezone)" /etc/localtime`
-        `arch-chroot /mnt hwclock --systohc`
-
-        `echo "#{data[:system_language]}.UTF-8" > /mnt/etc/locale.gen`
-        `arch-chroot /mnt locale-gen`
-        `echo "LANG=#{data[:system_language]}.UTF-8" > /mnt/etc/locale.conf`
-
-        `echo KEYMAP=#{data[:keyboard_keymap]} > /mnt/etc/vconsole.conf`
-
-        `echo "warding" > /mnt/etc/hostname`
-
-        `echo "127.0.0.1 localhost
-        ::1 localhost
-        127.0.1.1 warding.localdomain warding" > /mnt/etc/hosts`
-
-        `arch-chroot /mnt echo -e "#{data[:root_password]}\n#{data[:root_password]}" | passwd`
-
-        `arch-chroot /mnt pacman -Sy archlinux-keyring linux lvm2 mkinitcpio --noconfirm`
-
-        `sed -i "/^HOOK/s/filesystems/lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
-
-        `arch-chroot /mnt mkinitcpio -p linux`
-
-        `arch-chroot /mnt pacman -S intel-ucode --noconfirm`
-
-        # bootloader
-
-        if data[:system_settings][:bootloader] == 'systemd-boot'
-          `arch-chroot /mnt bootctl install`
-          `echo "title Warding Linux
-          linux /vmlinuz-linux
-          initrd /intel-ucode.img
-          initrd /initramfs-linux.img
-          options root=/dev/vg0/root rw" > /mnt/boot/loader/entries/warding.conf`
-        else
-          # TODO: grub
+        def setup_packages
+          `pacman -Sy`
+          `pacstrap /mnt base base-devel`
+          `genfstab -U /mnt >> /mnt/etc/fstab`
         end
 
-        # setup default packages
+        def setup_chroot(lang, keymap, password)
+          `arch-chroot /mnt ln -sf /usr/share/zoneinfo/"$(curl --fail https://ipapi.co/timezone)" /etc/localtime`
+          `arch-chroot /mnt hwclock --systohc`
 
-        # TODO: include gnome desktop
-        `arch-chroot /mnt pacman -S make nano fuse wget automake cmake gcc autoconf openbsd-netcat dhcpcd samba openssh openvpn unzip vim xorg-server xf86-video-intel plasma konsole dolphin kmix sddm wget git kvantum-qt5 zsh --noconfirm`
+          `echo "#{lang}.UTF-8" > /mnt/etc/locale.gen`
+          `arch-chroot /mnt locale-gen`
+          `echo "LANG=#{lang}.UTF-8" > /mnt/etc/locale.conf`
+          `echo KEYMAP=#{keymap} > /mnt/etc/vconsole.conf`
+          `echo "warding" > /mnt/etc/hostname`
+          `echo "127.0.0.1 localhost
+          ::1 localhost
+          127.0.1.1 warding.localdomain warding" > /mnt/etc/hosts`
 
-        `arch-chroot /mnt systemctl enable dhcpcd`
-        `arch-chroot /mnt systemctl enable sddm`
+          `arch-chroot /mnt echo -e "#{password}\n#{password}" | passwd`
 
-        `arch-chroot /mnt wget -qO- https://blackarch.org/strap.sh | sh`
+          `arch-chroot /mnt pacman -Sy linux lvm2 mkinitcpio --noconfirm`
+          `sed -i "/^HOOK/s/filesystems/lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
+          `arch-chroot /mnt mkinitcpio -p linux`
+          `arch-chroot /mnt pacman -S intel-ucode --noconfirm`
+        end
 
-        `arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh`
+        setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password])
 
-        # setup themes
+        def setup_bootloader(loader)
+          if loader == 'systemd-boot'
+            `arch-chroot /mnt bootctl install`
+            `echo "title Warding Linux
+            linux /vmlinuz-linux
+            initrd /intel-ucode.img
+            initrd /initramfs-linux.img
+            options root=/dev/vg0/root rw" > /mnt/boot/loader/entries/warding.conf`
+          else
+            # TODO: grub
+          end
+        end
 
-        if data[:extra_settings].include?('themes')
+        setup_bootloader(data[:system_settings][:bootloader])
+
+        def setup_usability
+          # TODO: include gnome desktop
+          `arch-chroot /mnt pacman -S nano fuse wget cmake openbsd-netcat dhcpcd samba openssh openvpn unzip vim xorg-server xf86-video-intel plasma konsole dolphin kmix sddm wget git kvantum-qt5 zsh --noconfirm`
+          `arch-chroot /mnt systemctl enable dhcpcd`
+          `arch-chroot /mnt systemctl enable sddm`
+          `arch-chroot /mnt wget -qO- https://blackarch.org/strap.sh | sh`
+          `arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh`
+        end
+
+        setup_usability
+
+        def setup_visuals
           `arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/PapirusDevelopmentTeam/arc-kde/master/install.sh | sh`
           `arch-chroot /mnt wget -qO- https://git.io/papirus-icon-theme-install | sh`
         end
 
-        # setup extra tools
+        setup_visuals if data[:extra_settings].include?('themes')
 
-        if data[:extra_settings].include?('tools')
+        def setup_extras
           `arch-chroot /mnt pacman -S nmap impacket go ruby php firefox atom hashcat john jre-openjdk proxychains-ng exploitdb httpie metasploit bind-tools radare2 sqlmap wpscan xclip --noconfirm`
           `arch-chroot /mnt mkdir -p /usr/share/wordlists`
           `arch-chroot /mnt wget -q https://github.com/danielmiessler/SecLists/raw/master/Passwords/Leaked-Databases/rockyou.txt.tar.gz -O /usr/share/wordlists/rockyou.txt.tar.gz`
           `arch-chroot /mnt wget -q https://github.com/danielmiessler/SecLists/raw/master/Discovery/Web-Content/common.txt -O /usr/share/wordlists/common.txt`
         end
 
-        # setup crons
+        setup_extras if data[:extra_settings].include?('tools')
 
-        # TODO: include crons
+        def setup_cron
+          # TODO: include crons
+        end
       end
     end
   end
