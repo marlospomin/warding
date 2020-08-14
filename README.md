@@ -2,28 +2,32 @@
 
 > Custom Arch Linux designed for security assessments and pentesting.
 
-## Install
+## Installation
 
-Boot Arch live with EFI enabled.
+Add this line to your application's Gemfile:
 
-Run the following command to install warding:
-
-```bash
-# Basic installation
-wget -qO- https://raw.githubusercontent.com/marlospomin/warding/master/install.sh | sh
+```ruby
+gem 'warding'
 ```
 
-By default the script will not install any theme, icons or tools. To enable that use `-e` to install eye candy features and `-t` to install all the basic tools.
-
 ```bash
-# Install tools only, leaving theming for yourself
-./install.sh -t
-# Install everything
-./install.sh -et
+bundle install
 ```
 
-And that's it.
+Or install it yourself as:
+
+```bash
+gem install warding
+```
+
+## Usage
+
+Write usage instructions here.
+
+## Contributing
+
+Bug reports and pull requests are welcome on GitHub at https://github.com/marlospomin/warding.
 
 ## License
 
-Code released under the [MIT](LICENSE) license.
+The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).

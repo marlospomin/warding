@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'warding'
+
+# create a new installer
+warding = Warding::Installer.new
+# print banner
+warding.banner
+# check if everything is alright
+warding.check
+# gather inputs from the user
+user_input = warding.gather
+# install warding
+warding.install(user_input)
