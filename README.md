@@ -4,17 +4,7 @@
 
 ## Installation
 
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'warding'
-```
-
-```bash
-bundle install
-```
-
-Or install it yourself as:
+Install warding by using the `gem install` command.
 
 ```bash
 gem install warding
@@ -22,7 +12,7 @@ gem install warding
 
 ## Usage
 
-Write usage instructions here.
+WIP.
 
 ## Contributing
 
