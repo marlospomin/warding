@@ -25,10 +25,11 @@ module Warding
     end
 
     def check
-      unless `uname -a`.include?('Arch')
+      unless `uname -a`.include?('archiso')
         @@prompt.error('Exiting, this is not an Arch Linux distribution!')
         exit!
       end
+
       unless `[ -d /sys/firmware/efi ] && echo true`.include?('true')
         @@prompt.error('UEFI/EFI must be enabled to install warding')
         exit!
@@ -87,10 +88,10 @@ module Warding
 
     def install(data)
       if @@prompt.yes?('Confirm settings and continue?')
+
         # setup mirrorlist
 
         if data[:update_mirrors]
-          `pacman -Sy reflector --noconfirm`
           `reflector --latest 25 --sort rate --save /etc/pacman.d/mirrorlist`
         end
 
@@ -140,7 +141,7 @@ module Warding
 
         # setup base packages
 
-        `pacman -S archlinux-keyring --noconfirm`
+        `pacman -Sy`
         `pacstrap /mnt base base-devel`
         `genfstab -U /mnt >> /mnt/etc/fstab`
 
@@ -161,7 +162,7 @@ module Warding
         ::1 localhost
         127.0.1.1 warding.localdomain warding" > /mnt/etc/hosts`
 
-        `arch-chroot /mnt echo -e "#{data[:root_password]}\n#{data[root_password]}" | passwd`
+        `arch-chroot /mnt echo -e "#{data[:root_password]}\n#{data[:root_password]}" | passwd`
 
         `arch-chroot /mnt pacman -Sy archlinux-keyring linux lvm2 mkinitcpio --noconfirm`
 
