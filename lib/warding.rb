@@ -202,6 +202,11 @@ module Warding
         def setup_usability
           # TODO: include gnome desktop
           `arch-chroot /mnt pacman -S nano fuse wget cmake openbsd-netcat dhcpcd samba openssh openvpn unzip vim xorg-server xf86-video-intel plasma konsole dolphin kmix sddm wget git kvantum-qt5 zsh --noconfirm`
+          `mkdir /mnt/etc/sddm.conf.d`
+          `echo "[Theme]
+          Current=breeze" > /mnt/etc/sddm.conf.d/theme.conf`
+          `echo "[Autologin]
+          User=root" > /mnt/etc/sddm.conf.d/login.conf`
           `arch-chroot /mnt systemctl enable dhcpcd`
           `arch-chroot /mnt systemctl enable sddm`
           `arch-chroot /mnt wget -qO- https://blackarch.org/strap.sh | sh`
