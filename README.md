@@ -14,6 +14,13 @@ gem install warding
 
 WIP.
 
+## Todo
+
+* Code missing features.
+* Add extra checks.
+* Test installation.
+* Add GitHub actions.
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/marlospomin/warding.
