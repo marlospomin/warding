@@ -25,4 +25,6 @@ Gem::Specification.new do |spec|
 
   spec.executables   = ['warding']
   spec.require_paths = ['lib']
+
+  spec.add_runtime_dependency 'tty-prompt'
 end

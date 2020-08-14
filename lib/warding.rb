@@ -97,7 +97,7 @@ module Warding
 
         setup_mirrors if data[:update_mirrors]
 
-        def setup_timezone(timezone)
+        def setup_timezone(timezone=false)
           `timedatectl set-ntp true`
           if timezone
             `timedatectl set-timezone #{timezone}`
@@ -152,13 +152,14 @@ module Warding
         end
 
         # setup encryption
-        # TODO: everything
 
         def setup_packages
           `pacman -Sy`
           `pacstrap /mnt base base-devel`
           `genfstab -U /mnt >> /mnt/etc/fstab`
         end
+
+        setup_packages
 
         def setup_chroot(lang, keymap, password)
           `arch-chroot /mnt ln -sf /usr/share/zoneinfo/"$(curl --fail https://ipapi.co/timezone)" /etc/localtime`
@@ -228,6 +229,12 @@ module Warding
         def setup_cron
           # TODO: include crons
         end
+
+        def finish
+          `reboot`
+        end
+
+        finish
       end
     end
   end
