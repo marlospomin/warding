@@ -156,7 +156,7 @@ module Warding
 
         def setup_packages
           `pacman -Sy`
-          `pacstrap /mnt base base-devel`
+          `pacstrap /mnt base base-devel linux linux-firmware lvm2 mkinitcpio man-db nano fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
           `genfstab -U /mnt >> /mnt/etc/fstab`
         end
 
@@ -175,7 +175,6 @@ module Warding
 
           `arch-chroot /mnt echo -e "#{password}\n#{password}" | passwd`
 
-          `arch-chroot /mnt pacman -Sy linux lvm2 mkinitcpio --noconfirm`
           `sed -i "/^HOOK/s/filesystems/lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
           `arch-chroot /mnt mkinitcpio -p linux`
           `arch-chroot /mnt pacman -S intel-ucode --noconfirm`
@@ -200,7 +199,7 @@ module Warding
 
         def setup_usability
           # TODO: include gnome desktop
-          `arch-chroot /mnt pacman -S nano fuse wget cmake openbsd-netcat dhcpcd samba openssh openvpn unzip vim xorg-server xf86-video-intel plasma konsole dolphin kmix sddm wget git kvantum-qt5 zsh --noconfirm`
+          `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma konsole dolphin kmix sddm kvantum-qt5 --noconfirm`
           `mkdir /mnt/etc/sddm.conf.d`
           `echo "[Theme]\nCurrent=breeze" > /mnt/etc/sddm.conf.d/theme.conf`
           `echo "[Autologin]\nUser=root" > /mnt/etc/sddm.conf.d/login.conf`
