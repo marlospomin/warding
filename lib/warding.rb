@@ -81,7 +81,7 @@ module Warding
           end
         end
 
-        key(:extra_settings).multi_select("Select extra options:", %w[tools themes cron])
+        key(:extra_settings).multi_select("Select extra options:", %w[desktop-environment hacking-tools crons])
       end
 
       parsed_input
@@ -157,7 +157,6 @@ module Warding
         def setup_packages
           `pacman -Sy`
           `pacstrap /mnt base base-devel linux linux-firmware lvm2 mkinitcpio reflector man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
-          `reflector --latest 25 --sort rate --save /mnt/etc/pacman.d/mirrorlist`
           `genfstab -U /mnt >> /mnt/etc/fstab`
         end
 
@@ -174,8 +173,7 @@ module Warding
           `echo "warding" > /mnt/etc/hostname`
           `echo "127.0.0.1 localhost\n::1 localhost\n127.0.1.1 warding.localdomain warding" > /mnt/etc/hosts`
 
-          # `arch-chroot /mnt echo -e "#{password}\n#{password}" | passwd`
-          `arch-chroot /mnt echo "#!/bin/bash\necho -e '#{password}\n#{password}' | passwd" > /tmp/passwd.sh; bash /tmp/passwd.sh`
+          `echo -e "#{password}\n#{password}" | arch-croot /mnt passwd`
 
           `sed -i "/^HOOK/s/filesystems/lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
           `arch-chroot /mnt mkinitcpio -p linux 2>/dev/null`
@@ -200,31 +198,24 @@ module Warding
         setup_bootloader(data[:system_settings][:bootloader])
 
         def setup_usability
-          # TODO: include gnome desktop
-          `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma konsole dolphin kmix sddm kvantum-qt5 cronie --noconfirm`
-          `mkdir -p /mnt/etc/sddm.conf.d`
-          `echo "[Theme]\nCurrent=breeze" > /mnt/etc/sddm.conf.d/theme.conf`
-          `echo "[Autologin]\nUser=root" > /mnt/etc/sddm.conf.d/login.conf`
           `arch-chroot /mnt systemctl enable dhcpcd`
-          `arch-chroot /mnt systemctl enable sddm`
-          `arch-chroot /mnt systemctl enable cronie`
-
-          `echo "#!/bin/bash\nwget -qO- https://blackarch.org/strap.sh | sh\nwget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh\nrm /var/spool/cron/root" > /mnt/root/post.sh`
-          `chmod +x /mnt/root/post.sh`
-          `echo "@reboot /root/post.sh" > /mnt/var/spool/cron/root`
-
-          # `arch-chroot /mnt wget -qO- https://blackarch.org/strap.sh | sh`
-          # `arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh`
+          `arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh`
+          `arch-chroot /mnt wget -qO- https://blackarch.org/strap.sh | sh`
         end
 
         setup_usability
 
         def setup_visuals
+          `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma konsole dolphin kmix sddm kvantum-qt5`
+          `mkdir -p /mnt/etc/sddm.conf.d`
+          `echo "[Theme]\nCurrent=breeze" > /mnt/etc/sddm.conf.d/theme.conf`
+          `echo "[Autologin]\nUser=root" > /mnt/etc/sddm.conf.d/login.conf`
+          `arch-chroot /mnt systemctl enable sddm`
           `arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/PapirusDevelopmentTeam/arc-kde/master/install.sh | sh`
           `arch-chroot /mnt wget -qO- https://git.io/papirus-icon-theme-install | sh`
         end
 
-        setup_visuals if data[:extra_settings].include?("themes")
+        setup_visuals if data[:extra_settings].include?("desktop-emvironment")
 
         def setup_tools
           `arch-chroot /mnt pacman -S nmap impacket go ruby php firefox atom hashcat john jre-openjdk proxychains-ng exploitdb httpie metasploit bind-tools radare2 sqlmap wpscan xclip --noconfirm`
@@ -233,15 +224,17 @@ module Warding
           `arch-chroot /mnt wget -q https://github.com/danielmiessler/SecLists/raw/master/Discovery/Web-Content/common.txt -O /usr/share/wordlists/common.txt`
         end
 
-        setup_tools if data[:extra_settings].include?("tools")
+        setup_tools if data[:extra_settings].include?("hacking-tools")
 
         def setup_cron
+          `arch-chroot /mnt pacman -S cronie --noconfirm`
+          `arch-chroot /mnt systemctl enable cronie`
           `echo "#!/bin/bash\nreflector --latest 25 --sort rate --save /etc/pacman.d/mirrorlist" > /mnt/etc/cron.hourly/mirrorlist; chmod +x /mnt/etc/cron.hourly/mirrorlist`
           `echo "#!/bin/bash\npacman -Sy" > /mnt/etc/cron.weekly/pacman-sync; chmod +x /mnt/etc/cron.weekly/pacman-sync`
           `echo "#!/bin/bash\npacman -Syu --noconfirm" > /mnt/etc/cron.monthly/system-upgrade; chmod +x /mnt/etc/cron.monthly/system-upgrade`
         end
 
-        setup_cron if data[:extra_settings].include?("cron")
+        setup_cron if data[:extra_settings].include?("crons")
 
         def finish
           `umount -R /mnt`

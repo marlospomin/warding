@@ -21,7 +21,6 @@ gem install warding
 ## Tasklist
 
 * Fix steps that contain pipes.
-* Fix `passwd` issue.
 * Add default smb conf.
 * Add AUR support.
 * Add `NetworkManager` support.
