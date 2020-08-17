@@ -206,6 +206,7 @@ module Warding
           `echo "[Autologin]\nUser=root" > /mnt/etc/sddm.conf.d/login.conf`
           `arch-chroot /mnt systemctl enable dhcpcd`
           `arch-chroot /mnt systemctl enable sddm`
+          # Fix the lines below
           `arch-chroot /mnt wget -qO- https://blackarch.org/strap.sh | sh`
           `arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh`
         end
@@ -233,6 +234,7 @@ module Warding
         end
 
         def finish
+          `umount -R /mnt`
           `reboot`
         end
 

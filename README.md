@@ -20,6 +20,7 @@ gem install warding
 
 ## Tasklist
 
+* Move base packages to `pacstrap`.
 * Code missing features.
 * Add extra checks.
 * Test installation.
