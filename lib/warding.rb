@@ -206,16 +206,15 @@ module Warding
           `echo "[Autologin]\nUser=root" > /mnt/etc/sddm.conf.d/login.conf`
           `arch-chroot /mnt systemctl enable dhcpcd`
           `arch-chroot /mnt systemctl enable sddm`
-          # Fix the lines below
-          `arch-chroot /mnt wget -qO- https://blackarch.org/strap.sh | sh`
-          `arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh`
+          `arch-chroot /mnt wget -q https://blackarch.org/strap.sh -O /tmp/strap.sh; bash /tmp/strap.sh`
+          `arch-chroot /mnt wget -q https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O /tmp/zsh.sh; bash /tmp/zsh.sh`
         end
 
         setup_usability
 
         def setup_visuals
-          `arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/PapirusDevelopmentTeam/arc-kde/master/install.sh | sh`
-          `arch-chroot /mnt wget -qO- https://git.io/papirus-icon-theme-install | sh`
+          `arch-chroot /mnt wget -q https://raw.githubusercontent.com/PapirusDevelopmentTeam/arc-kde/master/install.sh -O /tmp/theme.sh; bash /tmp/theme.sh`
+          `arch-chroot /mnt wget -q https://git.io/papirus-icon-theme-install -O /tmp/papirus.sh; bash /tmp/papirus.sh`
         end
 
         setup_visuals if data[:extra_settings].include?("themes")
