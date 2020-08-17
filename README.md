@@ -22,6 +22,7 @@ gem install warding
 
 * Move base packages to `pacstrap`.
 * Fix steps that contain pipes.
+* Fix `passwd` issue.
 * Add `EDITOR` setting.
 * Add AUR support.
 * Add `NetworkManager` support.
