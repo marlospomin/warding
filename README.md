@@ -1,4 +1,4 @@
-# Warding
+# Warding [![Gem Version](https://badge.fury.io/rb/warding.svg)](https://badge.fury.io/rb/warding)
 
 > Custom Arch Linux installer designed for security assessments and pentesting.
 
@@ -12,14 +12,19 @@ gem install warding
 
 ## Usage
 
-WIP.
+1. Download Arch Linux.
+2. Boot from the live ISO.
+3. Install warding (Ruby may also be required).
+4. Run the binary executable `warding` and fill in the prompts.
+5. Enjoy.
 
-## Todo
+## Tasklist
 
 * Code missing features.
 * Add extra checks.
 * Test installation.
 * Add GitHub actions.
+* Publish gem/package on GitHub.
 
 ## Contributing
 
