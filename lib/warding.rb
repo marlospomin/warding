@@ -156,7 +156,7 @@ module Warding
 
         def setup_packages
           `pacman -Sy`
-          `pacstrap /mnt base base-devel linux linux-firmware lvm2 mkinitcpio man-db nano fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
+          `pacstrap /mnt base base-devel linux linux-firmware lvm2 mkinitcpio man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
           `genfstab -U /mnt >> /mnt/etc/fstab`
         end
 
@@ -169,7 +169,7 @@ module Warding
           `echo "#{lang}.UTF-8" > /mnt/etc/locale.gen`
           `arch-chroot /mnt locale-gen`
           `echo "LANG=#{lang}.UTF-8" > /mnt/etc/locale.conf`
-          `echo KEYMAP=#{keymap} > /mnt/etc/vconsole.conf`
+          `echo "KEYMAP=#{keymap}" > /mnt/etc/vconsole.conf`
           `echo "warding" > /mnt/etc/hostname`
           `echo "127.0.0.1 localhost\n::1 localhost\n127.0.1.1 warding.localdomain warding" > /mnt/etc/hosts`
 
@@ -200,15 +200,20 @@ module Warding
 
         def setup_usability
           # TODO: include gnome desktop
-          `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma konsole dolphin kmix sddm kvantum-qt5 --noconfirm`
-          `mkdir /mnt/etc/sddm.conf.d`
+          `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma konsole dolphin kmix sddm kvantum-qt5 cronie --noconfirm`
+          `mkdir -p /mnt/etc/sddm.conf.d`
           `echo "[Theme]\nCurrent=breeze" > /mnt/etc/sddm.conf.d/theme.conf`
           `echo "[Autologin]\nUser=root" > /mnt/etc/sddm.conf.d/login.conf`
           `arch-chroot /mnt systemctl enable dhcpcd`
           `arch-chroot /mnt systemctl enable sddm`
-          # TODO: fix the lines below
-          `arch-chroot /mnt wget -qO- https://blackarch.org/strap.sh | sh`
-          `arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh`
+          `arch-chroot /mnt systemctl enable cronie`
+
+          `echo "#!/bin/bash\nwget -qO- https://blackarch.org/strap.sh | sh\nwget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh\nrm /var/spool/cron/root" > /mnt/root/post.sh`
+          `chmod +x /mnt/root/post.sh`
+          `echo "@reboot /root/post.sh" > /mnt/var/spool/cron/root`
+
+          # `arch-chroot /mnt wget -qO- https://blackarch.org/strap.sh | sh`
+          # `arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh`
         end
 
         setup_usability
@@ -230,11 +235,9 @@ module Warding
         setup_tools if data[:extra_settings].include?("tools")
 
         def setup_cron
-          `arch-chroot /mnt pacman -S cronie --noconfirm`
-          `arch-chroot /mnt systemctl enable cronie`
-          `echo "#!/bin/bash\nreflector --latest 25 --sort rate --save /etc/pacman.d/mirrorlist" > /etc/cron.hourly/mirrorlist`
-          `echo "#!/bin/bash\npacman -Sy" > /etc/cron.weekly/pacman-sync`
-          `echo "#!/bin/bash\npacman -Syu --noconfirm" > /etc/cron.monthly/system-upgrade`
+          `echo "#!/bin/bash\nreflector --latest 25 --sort rate --save /etc/pacman.d/mirrorlist" > /mnt/etc/cron.hourly/mirrorlist; chmod +x /mnt/etc/cron.hourly/mirrorlist`
+          `echo "#!/bin/bash\npacman -Sy" > /mnt/etc/cron.weekly/pacman-sync; chmod +x /mnt/etc/cron.weekly/pacman-sync`
+          `echo "#!/bin/bash\npacman -Syu --noconfirm" > /mnt/etc/cron.monthly/system-upgrade; chmod +x /mnt/etc/cron.monthly/system-upgrade`
         end
 
         setup_cron if data[:extra_settings].include?("cron")
