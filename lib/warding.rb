@@ -26,7 +26,8 @@ module Warding
 
     def check
       unless `uname -a`.include?("archiso")
-        @@prompt.error("Exiting, this is not an Arch Linux distribution!")
+        @@prompt.error("Exiting...")
+        @@prompt.warn("Warding can only be installed from within the live ISO context!")
         exit!
       end
 
