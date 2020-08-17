@@ -171,9 +171,7 @@ module Warding
           `echo "LANG=#{lang}.UTF-8" > /mnt/etc/locale.conf`
           `echo KEYMAP=#{keymap} > /mnt/etc/vconsole.conf`
           `echo "warding" > /mnt/etc/hostname`
-          `echo "127.0.0.1 localhost
-          ::1 localhost
-          127.0.1.1 warding.localdomain warding" > /mnt/etc/hosts`
+          `echo "127.0.0.1 localhost\n::1 localhost\n127.0.1.1 warding.localdomain warding" > /mnt/etc/hosts`
 
           `arch-chroot /mnt echo -e "#{password}\n#{password}" | passwd`
 
@@ -204,10 +202,8 @@ module Warding
           # TODO: include gnome desktop
           `arch-chroot /mnt pacman -S nano fuse wget cmake openbsd-netcat dhcpcd samba openssh openvpn unzip vim xorg-server xf86-video-intel plasma konsole dolphin kmix sddm wget git kvantum-qt5 zsh --noconfirm`
           `mkdir /mnt/etc/sddm.conf.d`
-          `echo "[Theme]
-          Current=breeze" > /mnt/etc/sddm.conf.d/theme.conf`
-          `echo "[Autologin]
-          User=root" > /mnt/etc/sddm.conf.d/login.conf`
+          `echo "[Theme]\nCurrent=breeze" > /mnt/etc/sddm.conf.d/theme.conf`
+          `echo "[Autologin]\nUser=root" > /mnt/etc/sddm.conf.d/login.conf`
           `arch-chroot /mnt systemctl enable dhcpcd`
           `arch-chroot /mnt systemctl enable sddm`
           `arch-chroot /mnt wget -qO- https://blackarch.org/strap.sh | sh`
