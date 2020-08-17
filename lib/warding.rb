@@ -233,8 +233,8 @@ module Warding
           `arch-chroot /mnt pacman -S cronie --noconfirm`
           `arch-chroot /mnt systemctl enable cronie`
           `echo "#!/bin/bash\nreflector --latest 25 --sort rate --save /etc/pacman.d/mirrorlist" > /etc/cron.hourly/mirrorlist`
-          `echo "#!/bin/bash\npacman -Sy" > /etc/cron.weekly/pacmansync`
-          `echo "#!/bin/bash\npacman -Syu --noconfirm" > /etc/cron.monthly/systemupgrade`
+          `echo "#!/bin/bash\npacman -Sy" > /etc/cron.weekly/pacman-sync`
+          `echo "#!/bin/bash\npacman -Syu --noconfirm" > /etc/cron.monthly/system-upgrade`
         end
 
         setup_cron if data[:extra_settings].include?("cron")
