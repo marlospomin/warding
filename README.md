@@ -21,6 +21,8 @@ gem install warding
 ## Tasklist
 
 * Move base packages to `pacstrap`.
+* Fix steps that contain pipes.
+* Add `EDITOR` setting.
 * Add AUR support.
 * Add `NetworkManager` support.
 * Code missing features.

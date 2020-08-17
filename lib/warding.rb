@@ -230,8 +230,14 @@ module Warding
         setup_extras if data[:extra_settings].include?("tools")
 
         def setup_cron
-          # TODO: include crons
+          `arch-chroot /mnt pacman -S cronie --noconfirm`
+          `systemctl enable cronie`
+          `#!/bin/bash\nreflector --latest 25 --sort rate --save /etc/pacman.d/mirrorlist > /etc/cron.hourly/mirrorlist`
+          `#!/bin/bash\npacman -Sy > /etc/cron.weekly/pacmansync`
+          `#!/bin/bash\npacman -Syu --noconfirm > /etc/cron.monthly/systemupgrade`
         end
+
+        setup_cron if data[:extra_settings].include?("cron")
 
         def finish
           `umount -R /mnt`
