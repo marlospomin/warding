@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'warding/version'
-require 'tty-prompt'
+require "warding/version"
+require "tty-prompt"
 
 module Warding
   class Error < StandardError; end
@@ -25,13 +25,13 @@ module Warding
     end
 
     def check
-      unless `uname -a`.include?('archiso')
-        @@prompt.error('Exiting, this is not an Arch Linux distribution!')
+      unless `uname -a`.include?("archiso")
+        @@prompt.error("Exiting, this is not an Arch Linux distribution!")
         exit!
       end
 
-      unless `[ -d /sys/firmware/efi ] && echo true`.include?('true')
-        @@prompt.error('UEFI/EFI must be enabled to install warding')
+      unless `[ -d /sys/firmware/efi ] && echo true`.include?("true")
+        @@prompt.error("UEFI/EFI must be enabled to install warding")
         exit!
       end
     end
@@ -41,53 +41,53 @@ module Warding
       keymaps_list = %w[us uk br en fr de zh ru it es]
 
       parsed_input = @@prompt.collect do
-        key(:update_mirrors).yes?('Update mirrorlist?')
-        key(:system_language).select('Pick the desired system language:', locales_list)
-        key(:keyboard_keymap).select('Pick your keyboard layout:', keymaps_list)
+        key(:update_mirrors).yes?("Update mirrorlist?")
+        key(:system_language).select("Pick the desired system language:", locales_list)
+        key(:keyboard_keymap).select("Pick your keyboard layout:", keymaps_list)
 
-        unless @@prompt.yes?('Set timezone automatically?', default: true)
-          key(:update_timezone).ask('Enter timezone:', required: true)
+        unless @@prompt.yes?("Set timezone automatically?", default: true)
+          key(:update_timezone).ask("Enter timezone:", required: true)
         end
 
-        key(:root_password).mask('Insert new root password:', required: true)
+        key(:root_password).mask("Insert new root password:", required: true)
 
         key(:system_settings) do
-          bootloader = key(:bootloader).select('Which bootloader to use?', %w[systemd-boot grub])
+          bootloader = key(:bootloader).select("Which bootloader to use?", %w[systemd-boot grub])
           partitions = key(:partitions).select(
-            'Select partition scheme to use:', ['/boot and /root', '/boot, /root and /home']
+            "Select partition scheme to use:", ["/boot and /root", "/boot, /root and /home"]
           )
 
-          key(:boot_size).slider('Boot drive partition size (MiB):', min: 512, max: 4096, default: 1024, step: 128)
+          key(:boot_size).slider("Boot drive partition size (MiB):", min: 512, max: 4096, default: 1024, step: 128)
 
-          if partitions == '/boot, /root and /home'
-            key(:home_size).slider('Home partition size (MiB):', min: 2048, max: 8192, default: 4096, step: 256)
+          if partitions == "/boot, /root and /home"
+            key(:home_size).slider("Home partition size (MiB):", min: 2048, max: 8192, default: 4096, step: 256)
           end
 
-          key(:swap_size).slider('Swap partition size (MiB):', min: 1024, max: 8192, default: 2048, step: 256)
+          key(:swap_size).slider("Swap partition size (MiB):", min: 1024, max: 8192, default: 2048, step: 256)
 
-          if @@prompt.yes?('Enable encryption?', default: false)
+          if @@prompt.yes?("Enable encryption?", default: false)
             key(:encryption_settings) do
-              key(:encryption_mode).expand('Which cryptic setup to use?') do |q|
-                if partitions == '/boot, /root and /home'
-                  q.choice key: 'm', name: 'minimal (/home only)' do :minimal end
-                  q.choice key: 's', name: 'safe (/home, /var, /tmp and swap)', value: :safe
+              key(:encryption_mode).expand("Which cryptic setup to use?") do |q|
+                if partitions == "/boot, /root and /home"
+                  q.choice key: "m", name: "minimal (/home only)" do :minimal end
+                  q.choice key: "s", name: "safe (/home, /var, /tmp and swap)", value: :safe
                 end
-                q.choice key: 'p', name: 'paranoid (full disk encryption, except /boot)', value: :paranoid
-                q.choice key: 'i', name: 'insane (full disk encryption)', value: :insane if bootloader == 'grub'
+                q.choice key: "p", name: "paranoid (full disk encryption, except /boot)", value: :paranoid
+                q.choice key: "i", name: "insane (full disk encryption)", value: :insane if bootloader == "grub"
               end
-              key(:encryption_key).mask('Insert the encryption key:', required: true)
+              key(:encryption_key).mask("Insert the encryption key:", required: true)
             end
           end
         end
 
-        key(:extra_settings).multi_select('Select extra options:', %w[tools themes cron])
+        key(:extra_settings).multi_select("Select extra options:", %w[tools themes cron])
       end
 
       parsed_input
     end
 
     def install(data)
-      if @@prompt.yes?('Confirm settings and continue?')
+      if @@prompt.yes?("Confirm settings and continue?")
 
         @@prompt.say("Installing, please wait...")
 
@@ -97,7 +97,7 @@ module Warding
 
         setup_mirrors if data[:update_mirrors]
 
-        def setup_timezone(timezone=false)
+        def setup_timezone(timezone = false)
           `timedatectl set-ntp true`
           if timezone
             `timedatectl set-timezone #{timezone}`
@@ -120,11 +120,11 @@ module Warding
 
         setup_partitions(data[:system_settings][:boot_size])
 
-        def setup_lvm(scheme, swap_size, home_size=false)
+        def setup_lvm(scheme, swap_size, home_size = false)
           `pvcreate /dev/sda2`
           `vgcreate vg0 /dev/sda2`
           `lvcreate -L #{swap_size}Mib vg0 -n swap`
-          if scheme == '/boot, /root and /home'
+          if scheme == "/boot, /root and /home"
             `lvcreate -L #{home_size}Mib vg0 -n home`
           end
           `lvcreate -l 100%FREE vg0 -n root`
@@ -132,7 +132,7 @@ module Warding
           `mkfs.ext4 /dev/vg0/root`
           `mount /dev/vg0/root /mnt`
 
-          if scheme == '/boot, /root and /home'
+          if scheme == "/boot, /root and /home"
             `mkfs.ext4 /dev/vg0/home`
             `mount /dev/vg0/home /mnt/home`
           end
@@ -145,7 +145,7 @@ module Warding
           `swapon /dev/vg0/swap`
         end
 
-        if data[:system_settings][:partition] == '/boot, /root and /home'
+        if data[:system_settings][:partition] == "/boot, /root and /home"
           setup_lvm(data[:system_settings][:partition], data[:system_settings][:swap_size], data[:system_settings[:home_size]])
         else
           setup_lvm(data[:system_settings][:partition], data[:system_settings][:swap_size])
@@ -185,7 +185,7 @@ module Warding
         setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password])
 
         def setup_bootloader(loader)
-          if loader == 'systemd-boot'
+          if loader == "systemd-boot"
             `arch-chroot /mnt bootctl install`
             `echo "title Warding Linux
             linux /vmlinuz-linux
@@ -220,7 +220,7 @@ module Warding
           `arch-chroot /mnt wget -qO- https://git.io/papirus-icon-theme-install | sh`
         end
 
-        setup_visuals if data[:extra_settings].include?('themes')
+        setup_visuals if data[:extra_settings].include?("themes")
 
         def setup_extras
           `arch-chroot /mnt pacman -S nmap impacket go ruby php firefox atom hashcat john jre-openjdk proxychains-ng exploitdb httpie metasploit bind-tools radare2 sqlmap wpscan xclip --noconfirm`
@@ -229,7 +229,7 @@ module Warding
           `arch-chroot /mnt wget -q https://github.com/danielmiessler/SecLists/raw/master/Discovery/Web-Content/common.txt -O /usr/share/wordlists/common.txt`
         end
 
-        setup_extras if data[:extra_settings].include?('tools')
+        setup_extras if data[:extra_settings].include?("tools")
 
         def setup_cron
           # TODO: include crons
