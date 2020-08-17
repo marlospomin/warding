@@ -103,7 +103,7 @@ module Warding
           if timezone
             `timedatectl set-timezone #{timezone}`
           else
-            `timedatectl set-timezone "$(curl --fail https://ipapi.co/timezone)"`
+            `timedatectl set-timezone "$(curl -s https://ipapi.co/timezone)"`
           end
         end
 
@@ -156,14 +156,15 @@ module Warding
 
         def setup_packages
           `pacman -Sy`
-          `pacstrap /mnt base base-devel linux linux-firmware lvm2 mkinitcpio man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
+          `pacstrap /mnt base base-devel linux linux-firmware lvm2 mkinitcpio reflector man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
+          `reflector --latest 25 --sort rate --save /mnt/etc/pacman.d/mirrorlist`
           `genfstab -U /mnt >> /mnt/etc/fstab`
         end
 
         setup_packages
 
         def setup_chroot(lang, keymap, password)
-          `arch-chroot /mnt ln -sf /usr/share/zoneinfo/"$(curl --fail https://ipapi.co/timezone)" /etc/localtime`
+          `arch-chroot /mnt ln -sf /usr/share/zoneinfo/"$(curl -s https://ipapi.co/timezone)" /etc/localtime`
           `arch-chroot /mnt hwclock --systohc`
 
           `echo "#{lang}.UTF-8" > /mnt/etc/locale.gen`

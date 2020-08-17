@@ -20,15 +20,13 @@ gem install warding
 
 ## Tasklist
 
-* Move base packages to `pacstrap`.
 * Fix steps that contain pipes.
 * Fix `passwd` issue.
-* Add `EDITOR` setting.
+* Add default smb conf.
 * Add AUR support.
 * Add `NetworkManager` support.
 * Code missing features.
 * Add extra checks.
-* Test installation.
 * Add GitHub actions.
 * Publish gem/package on GitHub.
 
