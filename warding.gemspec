@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["marlospomin@gmail.com"]
 
   spec.summary       = "Warding Linux installer."
-  spec.description   = "Custom Arch Linux designed for security assessments and pentesting."
+  spec.description   = "Custom Arch Linux installer designed for security assessments and pentesting."
   spec.homepage      = "https://github.com/marlospomin/warding"
   spec.license       = "MIT"
 
