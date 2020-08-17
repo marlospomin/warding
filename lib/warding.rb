@@ -173,7 +173,8 @@ module Warding
           `echo "warding" > /mnt/etc/hostname`
           `echo "127.0.0.1 localhost\n::1 localhost\n127.0.1.1 warding.localdomain warding" > /mnt/etc/hosts`
 
-          `arch-chroot /mnt echo -e "#{password}\n#{password}" | passwd`
+          # `arch-chroot /mnt echo -e "#{password}\n#{password}" | passwd`
+          `arch-chroot /mnt echo "#!/bin/bash\necho -e '#{password}\n#{password}' | passwd" > /tmp/passwd.sh; bash /tmp/passwd.sh`
 
           `sed -i "/^HOOK/s/filesystems/lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
           `arch-chroot /mnt mkinitcpio -p linux`
@@ -219,14 +220,14 @@ module Warding
 
         setup_visuals if data[:extra_settings].include?("themes")
 
-        def setup_extras
+        def setup_tools
           `arch-chroot /mnt pacman -S nmap impacket go ruby php firefox atom hashcat john jre-openjdk proxychains-ng exploitdb httpie metasploit bind-tools radare2 sqlmap wpscan xclip --noconfirm`
           `arch-chroot /mnt mkdir -p /usr/share/wordlists`
           `arch-chroot /mnt wget -q https://github.com/danielmiessler/SecLists/raw/master/Passwords/Leaked-Databases/rockyou.txt.tar.gz -O /usr/share/wordlists/rockyou.txt.tar.gz`
           `arch-chroot /mnt wget -q https://github.com/danielmiessler/SecLists/raw/master/Discovery/Web-Content/common.txt -O /usr/share/wordlists/common.txt`
         end
 
-        setup_extras if data[:extra_settings].include?("tools")
+        setup_tools if data[:extra_settings].include?("tools")
 
         def setup_cron
           `arch-chroot /mnt pacman -S cronie --noconfirm`
