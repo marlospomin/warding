@@ -178,7 +178,7 @@ module Warding
           `arch-chroot /mnt echo "#!/bin/bash\necho -e '#{password}\n#{password}' | passwd" > /tmp/passwd.sh; bash /tmp/passwd.sh`
 
           `sed -i "/^HOOK/s/filesystems/lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
-          `arch-chroot /mnt mkinitcpio -p linux`
+          `arch-chroot /mnt mkinitcpio -p linux 2>/dev/null`
           `arch-chroot /mnt pacman -S intel-ucode --noconfirm`
         end
 
@@ -186,7 +186,7 @@ module Warding
 
         def setup_bootloader(loader)
           if loader == "systemd-boot"
-            `arch-chroot /mnt bootctl install`
+            `arch-chroot /mnt bootctl install 2>/dev/null`
             `echo "title Warding Linux
             linux /vmlinuz-linux
             initrd /intel-ucode.img
