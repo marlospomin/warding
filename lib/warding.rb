@@ -173,7 +173,7 @@ module Warding
           `echo "warding" > /mnt/etc/hostname`
           `echo "127.0.0.1 localhost\n::1 localhost\n127.0.1.1 warding.localdomain warding" > /mnt/etc/hosts`
 
-          `echo -e "#{password}\n#{password}" | arch-croot /mnt passwd`
+          `echo -e "#{password}\n#{password}" | arch-chroot /mnt passwd`
 
           `sed -i "/^HOOK/s/filesystems/lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
           `arch-chroot /mnt mkinitcpio -p linux 2>/dev/null`
