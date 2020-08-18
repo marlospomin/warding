@@ -199,8 +199,8 @@ module Warding
 
         def setup_usability
           `arch-chroot /mnt systemctl enable dhcpcd`
-          `wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | arch-chroot /mnt sh`
-          `wget -qO- https://blackarch.org/strap.sh | arch-chroot /mnt sh`
+          `arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh`
+          `arch-chroot /mnt wget -qO- https://blackarch.org/strap.sh | sh`
         end
 
         setup_usability
