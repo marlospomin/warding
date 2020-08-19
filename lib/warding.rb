@@ -204,7 +204,7 @@ module Warding
           # `arch-chroot /mnt wget -qO- https://blackarch.org/strap.sh | sh`
           `wget -q https://www.blackarch.org/keyring/blackarch-keyring.pkg.tar.xz{,.sig}`
           `gpg --keyserver hkp://pgp.mit.edu --recv-keys 4345771566D76038C7FEB43863EC0ADBEA87E4E3 > /dev/null 2>&1`
-          `gpg  --keyserver-options no-auto-key-retrieve --with-fingerprint blackarch-keyring.pkg.tar.xz.sig > /dev/null 2>&1`
+          `gpg --keyserver-options no-auto-key-retrieve --with-fingerprint blackarch-keyring.pkg.tar.xz.sig > /dev/null 2>&1`
           `rm blackarch-keyring.pkg.tar.xz.sig`
           `pacman-key --init`
           `pacman --config /dev/null --noconfirm -U blackarch-keyring.pkg.tar.xz`
