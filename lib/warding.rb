@@ -155,7 +155,7 @@ module Warding
         # setup encryption
 
         def setup_packages
-          `pacman -Sy`
+          `pacman -Syy`
           `pacstrap /mnt base base-devel linux linux-firmware lvm2 mkinitcpio reflector man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
           `genfstab -U /mnt >> /mnt/etc/fstab`
         end
