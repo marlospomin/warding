@@ -198,10 +198,11 @@ module Warding
         setup_bootloader(data[:system_settings][:bootloader])
 
         def setup_usability
+          # enable internet
           `arch-chroot /mnt systemctl enable dhcpcd`
-
-          `arch-chroot /mnt sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"`
-
+          # change default shell
+          `arch-chroot /mnt chsh -s $(which zsh)"`
+          # setup blackarch's keyring
           `wget -q https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz{,.sig}`
           `gpg --keyserver hkp://pgp.mit.edu --recv-keys 4345771566D76038C7FEB43863EC0ADBEA87E4E3 > /dev/null 2>&1`
           `gpg --keyserver-options no-auto-key-retrieve --with-fingerprint blackarch-keyring.pkg.tar.xz.sig > /dev/null 2>&1`
@@ -209,6 +210,7 @@ module Warding
           `pacman-key --init`
           `pacman --config /dev/null --noconfirm -U blackarch-keyring.pkg.tar.xz`
           `pacman-key --populate`
+          # update package list
           `pacman -Syy`
         end
 
