@@ -38,7 +38,7 @@ module Warding
     end
 
     def gather
-      locales_list = %w[en_US es_ES pt_BR ru_RU fr_FR it_IT de_DE ja_JP ko_KR zh_CN]
+      locales_list = %w[en-US es-ES pt-BR ru-RU fr-FR it-IT de-DE ja-JP ko-KR zh-CN]
       keymaps_list = %w[us uk br en fr de zh ru it es]
 
       parsed_input = @@prompt.collect do
@@ -155,7 +155,7 @@ module Warding
         # setup encryption
 
         def setup_packages
-          `pacman -Sy`
+          `pacman -Syy`
           `pacstrap /mnt base base-devel linux linux-firmware lvm2 mkinitcpio reflector man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
           `genfstab -U /mnt >> /mnt/etc/fstab`
         end
@@ -166,7 +166,7 @@ module Warding
           `arch-chroot /mnt ln -sf /usr/share/zoneinfo/"$(curl -s https://ipapi.co/timezone)" /etc/localtime`
           `arch-chroot /mnt hwclock --systohc`
 
-          `echo "#{lang}.UTF-8 UTF-8" > /mnt/etc/locale.gen`
+          `echo "#{lang}.UTF-8" > /mnt/etc/locale.gen`
           `arch-chroot /mnt locale-gen`
           `echo "LANG=#{lang}.UTF-8" > /mnt/etc/locale.conf`
           `echo "KEYMAP=#{keymap}" > /mnt/etc/vconsole.conf`
@@ -199,8 +199,17 @@ module Warding
 
         def setup_usability
           `arch-chroot /mnt systemctl enable dhcpcd`
-          `arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh | sh`
-          `arch-chroot /mnt wget -qO- https://blackarch.org/strap.sh | sh`
+
+          `arch-chroot /mnt sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"`
+
+          `wget -q https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz{,.sig}`
+          `gpg --keyserver hkp://pgp.mit.edu --recv-keys 4345771566D76038C7FEB43863EC0ADBEA87E4E3 > /dev/null 2>&1`
+          `gpg --keyserver-options no-auto-key-retrieve --with-fingerprint blackarch-keyring.pkg.tar.xz.sig > /dev/null 2>&1`
+          `rm blackarch-keyring.pkg.tar.xz.sig`
+          `pacman-key --init`
+          `pacman --config /dev/null --noconfirm -U blackarch-keyring.pkg.tar.xz`
+          `pacman-key --populate`
+          `pacman -Syy`
         end
 
         setup_usability
