@@ -38,7 +38,7 @@ module Warding
     end
 
     def gather
-      locales_list = %w[en-US es-ES pt-BR ru-RU fr-FR it-IT de-DE ja-JP ko-KR zh-CN]
+      locales_list = %w[en_US es_ES pt_BR ru_RU fr_FR it_IT de_DE ja_JP ko_KR zh_CN]
       keymaps_list = %w[us uk br en fr de zh ru it es]
 
       parsed_input = @@prompt.collect do
@@ -166,7 +166,7 @@ module Warding
           `arch-chroot /mnt ln -sf /usr/share/zoneinfo/"$(curl -s https://ipapi.co/timezone)" /etc/localtime`
           `arch-chroot /mnt hwclock --systohc`
 
-          `echo "#{lang}.UTF-8" > /mnt/etc/locale.gen`
+          `echo "#{lang}.UTF-8 UTF-8" > /mnt/etc/locale.gen`
           `arch-chroot /mnt locale-gen`
           `echo "LANG=#{lang}.UTF-8" > /mnt/etc/locale.conf`
           `echo "KEYMAP=#{keymap}" > /mnt/etc/vconsole.conf`

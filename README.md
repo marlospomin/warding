@@ -20,7 +20,9 @@ gem install warding
 
 ## Tasklist
 
-* Fix steps that contain pipes.
+* Move extra to enabled by default.
+* Add option to choose desktop environment.
+* Drop `ohmyzsh` in favor of regular zsh for now.
 * Add default smb conf.
 * Add AUR support.
 * Add `NetworkManager` support.
