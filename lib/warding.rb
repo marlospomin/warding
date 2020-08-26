@@ -81,7 +81,7 @@ module Warding
           end
         end
 
-        key(:extra_settings).multi_select("Select extra options:", %w[desktop-environment hacking-tools crons])
+        key(:desktop_environment).multi_select("Select your desktop environment:", %w[plasma gnome none])
       end
 
       parsed_input
@@ -93,6 +93,7 @@ module Warding
         @@prompt.say("Installing, please wait...")
 
         def setup_mirrors
+          # update mirrorlist
           `reflector --latest 25 --sort rate --save /etc/pacman.d/mirrorlist`
         end
 
@@ -140,7 +141,11 @@ module Warding
 
           `mkfs.fat -F32 /dev/sda1`
           `mkdir /mnt/boot`
-          `mount /dev/sda1 /mnt/boot`
+          if data[:system_settings][:bootloader] == "systemd-boot"
+            `mount /dev/sda1 /mnt/boot`
+          else
+            `mount /dev/sda1 /mnt/boot/efi`
+          end
 
           `mkswap /dev/vg0/swap`
           `swapon /dev/vg0/swap`
@@ -155,28 +160,38 @@ module Warding
         # setup encryption
 
         def setup_packages
+          # update packages list
           `pacman -Syy`
-          `pacstrap /mnt base base-devel linux linux-firmware lvm2 mkinitcpio reflector man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
+          # install base system
+          `pacstrap /mnt base base-devel linux linux-firmware lvm2 mkinitcpio reflector cronie man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
+          # generate fstab
           `genfstab -U /mnt >> /mnt/etc/fstab`
         end
 
         setup_packages
 
         def setup_chroot(lang, keymap, password)
+          # set timezone
           `arch-chroot /mnt ln -sf /usr/share/zoneinfo/"$(curl -s https://ipapi.co/timezone)" /etc/localtime`
+          # update clock
           `arch-chroot /mnt hwclock --systohc`
-
+          # set locale
           `echo "#{lang}.UTF-8 UTF-8" > /mnt/etc/locale.gen`
           `arch-chroot /mnt locale-gen`
           `echo "LANG=#{lang}.UTF-8" > /mnt/etc/locale.conf`
+          # set keymap
           `echo "KEYMAP=#{keymap}" > /mnt/etc/vconsole.conf`
+          # update hostname
           `echo "warding" > /mnt/etc/hostname`
+          # update hosts
           `echo "127.0.0.1 localhost\n::1 localhost\n127.0.1.1 warding.localdomain warding" > /mnt/etc/hosts`
-
+          # update root password
           `echo -e "#{password}\n#{password}" | arch-chroot /mnt passwd`
-
+          # update hooks
           `sed -i "/^HOOK/s/filesystems/lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
+          # recompile initramfs
           `arch-chroot /mnt mkinitcpio -p linux 2>/dev/null`
+          # add intel microcode
           `arch-chroot /mnt pacman -S intel-ucode --noconfirm`
         end
 
@@ -191,7 +206,9 @@ module Warding
             initrd /initramfs-linux.img
             options root=/dev/vg0/root rw" > /mnt/boot/loader/entries/warding.conf`
           else
-            # TODO: grub
+            `arch-chroot /mnt pacman -S grub efibootmgr --noconfirm`
+            `arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB`
+            `arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg`
           end
         end
 
@@ -200,6 +217,12 @@ module Warding
         def setup_usability
           # enable internet
           `arch-chroot /mnt systemctl enable dhcpcd`
+          # add cron jobs
+          `echo "#!/bin/bash\nreflector --latest 25 --sort rate --save /etc/pacman.d/mirrorlist" > /mnt/etc/cron.hourly/mirrorlist; chmod +x /mnt/etc/cron.hourly/mirrorlist`
+          `echo "#!/bin/bash\npacman -Sy" > /mnt/etc/cron.weekly/pacman-sync; chmod +x /mnt/etc/cron.weekly/pacman-sync`
+          `echo "#!/bin/bash\npacman -Syu --noconfirm" > /mnt/etc/cron.monthly/system-upgrade; chmod +x /mnt/etc/cron.monthly/system-upgrade`
+          # enable cron jobs
+          `arch-chroot /mnt systemctl enable cronie`
           # change default shell
           `arch-chroot /mnt chsh -s $(which zsh)"`
           # setup blackarch's keyring
@@ -216,36 +239,29 @@ module Warding
 
         setup_usability
 
-        def setup_visuals
-          `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma konsole dolphin kmix sddm kvantum-qt5`
-          `mkdir -p /mnt/etc/sddm.conf.d`
-          `echo "[Theme]\nCurrent=breeze" > /mnt/etc/sddm.conf.d/theme.conf`
-          `echo "[Autologin]\nUser=root" > /mnt/etc/sddm.conf.d/login.conf`
-          `arch-chroot /mnt systemctl enable sddm`
-          `arch-chroot /mnt wget -qO- https://raw.githubusercontent.com/PapirusDevelopmentTeam/arc-kde/master/install.sh | sh`
-          `arch-chroot /mnt wget -qO- https://git.io/papirus-icon-theme-install | sh`
+        def setup_visuals(theme = "none")
+          if theme == "none"
+            break
+          elsif theme == "kde"
+            # install packages
+            `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma konsole dolphin kmix sddm kvantum-qt5`
+            # create conf dir
+            `mkdir -p /mnt/etc/sddm.conf.d`
+            # fix theme
+            `echo "[Theme]\nCurrent=breeze" > /mnt/etc/sddm.conf.d/theme.conf`
+            # enable autologin
+            `echo "[Autologin]\nUser=root" > /mnt/etc/sddm.conf.d/login.conf`
+            # enable sddm
+            `arch-chroot /mnt systemctl enable sddm`
+          else
+            # install packages
+            `arch-chroot /mnt pacman -S xf86-video-intel gnome`
+            # enable gdm
+            `arch-chroot /mnt systemctl enable gdm`
+          end
         end
 
-        setup_visuals if data[:extra_settings].include?("desktop-emvironment")
-
-        def setup_tools
-          `arch-chroot /mnt pacman -S nmap impacket go ruby php firefox atom hashcat john jre-openjdk proxychains-ng exploitdb httpie metasploit bind-tools radare2 sqlmap wpscan xclip --noconfirm`
-          `arch-chroot /mnt mkdir -p /usr/share/wordlists`
-          `arch-chroot /mnt wget -q https://github.com/danielmiessler/SecLists/raw/master/Passwords/Leaked-Databases/rockyou.txt.tar.gz -O /usr/share/wordlists/rockyou.txt.tar.gz`
-          `arch-chroot /mnt wget -q https://github.com/danielmiessler/SecLists/raw/master/Discovery/Web-Content/common.txt -O /usr/share/wordlists/common.txt`
-        end
-
-        setup_tools if data[:extra_settings].include?("hacking-tools")
-
-        def setup_cron
-          `arch-chroot /mnt pacman -S cronie --noconfirm`
-          `arch-chroot /mnt systemctl enable cronie`
-          `echo "#!/bin/bash\nreflector --latest 25 --sort rate --save /etc/pacman.d/mirrorlist" > /mnt/etc/cron.hourly/mirrorlist; chmod +x /mnt/etc/cron.hourly/mirrorlist`
-          `echo "#!/bin/bash\npacman -Sy" > /mnt/etc/cron.weekly/pacman-sync; chmod +x /mnt/etc/cron.weekly/pacman-sync`
-          `echo "#!/bin/bash\npacman -Syu --noconfirm" > /mnt/etc/cron.monthly/system-upgrade; chmod +x /mnt/etc/cron.monthly/system-upgrade`
-        end
-
-        setup_cron if data[:extra_settings].include?("crons")
+        setup_visuals(data[:desktop_environment])
 
         def finish
           `umount -R /mnt`
