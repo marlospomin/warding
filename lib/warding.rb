@@ -169,7 +169,7 @@ module Warding
           # update packages list
           `pacman -Syy`
           # install base system
-          `pacstrap /mnt base base-devel linux linux-firmware lvm2 mkinitcpio reflector networkmanager cronie man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
+          `pacstrap /mnt base base-devel linux linux-firmware lvm2 mkinitcpio dmidecode reflector networkmanager cronie man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
           # generate fstab
           `genfstab -U /mnt >> /mnt/etc/fstab`
         end
@@ -243,6 +243,12 @@ module Warding
           `pacman-key --populate`
           # update package list
           `pacman -Syy`
+          # check if on VM
+          if `dmidecode -s system-manufacturer`.include?("VMware, Inc.")
+            # install and enable VMware utils
+            `arch-chroot /mnt pacman -S openvpn-vm-tools --noconfirm`
+            `arch-chroot /mnt systemctl enable vmtoolsd`
+          end
         end
 
         setup_usability
