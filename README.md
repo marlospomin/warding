@@ -21,11 +21,9 @@ gem install warding
 ## Tasklist
 
 * Add sddm and gdm extra confs.
-* Add more comments.
 * Refactor.
 * Suppress outputs.
 * Add AUR support.
-* Add `NetworkManager` support.
 * Code missing features.
 * Add extra checks.
 * Add GitHub actions.
