@@ -100,7 +100,9 @@ module Warding
         setup_mirrors if data[:update_mirrors]
 
         def setup_timezone(timezone = false)
+          # set clock
           `timedatectl set-ntp true`
+          # set timezone
           if timezone
             `timedatectl set-timezone #{timezone}`
           else
@@ -111,6 +113,7 @@ module Warding
         data[:update_timezone] ? setup_timezone(data[:update_timezone]) : setup_timezone
 
         def setup_partitions(boot_size)
+          # create partitions
           `parted -s -a optimal /dev/sda \
             mklabel gpt \
             mkpart primary fat32 0% #{boot_size}Mib \
@@ -123,22 +126,25 @@ module Warding
         setup_partitions(data[:system_settings][:boot_size])
 
         def setup_lvm(scheme, swap_size, home_size = false)
+          # create physical volume
           `pvcreate /dev/sda2`
+          # create virtual group
           `vgcreate vg0 /dev/sda2`
+          # create logical volumes
           `lvcreate -L #{swap_size}Mib vg0 -n swap`
           if scheme == "/boot, /root and /home"
             `lvcreate -L #{home_size}Mib vg0 -n home`
           end
           `lvcreate -l 100%FREE vg0 -n root`
-
+          # make and mount root fs
           `mkfs.ext4 /dev/vg0/root`
           `mount /dev/vg0/root /mnt`
-
+          # make and mount home folder
           if scheme == "/boot, /root and /home"
             `mkfs.ext4 /dev/vg0/home`
             `mount /dev/vg0/home /mnt/home`
           end
-
+          # make and mount boot partition
           `mkfs.fat -F32 /dev/sda1`
           `mkdir /mnt/boot`
           if data[:system_settings][:bootloader] == "systemd-boot"
@@ -146,7 +152,7 @@ module Warding
           else
             `mount /dev/sda1 /mnt/boot/efi`
           end
-
+          # setup swap
           `mkswap /dev/vg0/swap`
           `swapon /dev/vg0/swap`
         end
@@ -198,6 +204,7 @@ module Warding
         setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password])
 
         def setup_bootloader(loader)
+          # setup systemd-boot
           if loader == "systemd-boot"
             `arch-chroot /mnt bootctl install 2>/dev/null`
             `echo "title Warding Linux
@@ -206,6 +213,7 @@ module Warding
             initrd /initramfs-linux.img
             options root=/dev/vg0/root rw" > /mnt/boot/loader/entries/warding.conf`
           else
+            # setup grub
             `arch-chroot /mnt pacman -S grub efibootmgr --noconfirm`
             `arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB`
             `arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg`
@@ -264,6 +272,7 @@ module Warding
         setup_visuals(data[:desktop_environment])
 
         def finish
+          # end
           `umount -R /mnt`
           `reboot`
         end
