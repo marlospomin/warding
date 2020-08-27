@@ -194,7 +194,7 @@ module Warding
           # update hooks
           `sed -i "/^HOOK/s/filesystems/lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
           # recompile initramfs
-          `arch-chroot /mnt mkinitcpio -p linux 2>/dev/null`
+          `arch-chroot /mnt mkinitcpio -p linux`
           # add intel microcode
           `arch-chroot /mnt pacman -S intel-ucode --noconfirm`
         end
@@ -204,7 +204,7 @@ module Warding
         def setup_bootloader(loader)
           # setup systemd-boot
           if loader == "systemd-boot"
-            `arch-chroot /mnt bootctl install 2>/dev/null`
+            `arch-chroot /mnt bootctl install`
             `echo "title Warding Linux
             linux /vmlinuz-linux
             initrd /intel-ucode.img
