@@ -163,8 +163,6 @@ module Warding
           setup_lvm(data[:system_settings][:partition], data[:system_settings][:swap_size])
         end
 
-        # setup encryption
-
         def setup_packages
           # update packages list
           `pacman -Syy`
