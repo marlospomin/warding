@@ -169,7 +169,7 @@ module Warding
           # update packages list
           `pacman -Syy`
           # install base system
-          `pacstrap /mnt base base-devel linux linux-firmware lvm2 mkinitcpio reflector cronie man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
+          `pacstrap /mnt base base-devel linux linux-firmware lvm2 mkinitcpio reflector networkmanager cronie man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
           # generate fstab
           `genfstab -U /mnt >> /mnt/etc/fstab`
         end
@@ -224,7 +224,7 @@ module Warding
 
         def setup_usability
           # enable internet
-          `arch-chroot /mnt systemctl enable dhcpcd`
+          `arch-chroot /mnt systemctl enable NetworkManager`
           # add cron jobs
           `echo "#!/bin/bash\nreflector --latest 25 --sort rate --save /etc/pacman.d/mirrorlist" > /mnt/etc/cron.hourly/mirrorlist; chmod +x /mnt/etc/cron.hourly/mirrorlist`
           `echo "#!/bin/bash\npacman -Sy" > /mnt/etc/cron.weekly/pacman-sync; chmod +x /mnt/etc/cron.weekly/pacman-sync`
