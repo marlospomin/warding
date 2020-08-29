@@ -20,14 +20,9 @@ gem install warding
 
 ## Tasklist
 
-* Add sddm and gdm extra confs.
 * Refactor.
 * Suppress outputs.
-* Add AUR support.
-* Code missing features.
 * Add extra checks.
-* Add GitHub actions.
-* Publish gem/package on GitHub.
 
 ## Contributing
 

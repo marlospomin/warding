@@ -53,29 +53,11 @@ module Warding
         key(:root_password).mask("Insert new root password:", required: true)
 
         key(:system_settings) do
-          bootloader = key(:bootloader).select("Which bootloader to use?", %w[systemd-boot grub])
-          partitions = key(:partitions).select(
-            "Select partition scheme to use:", ["/boot and /root", "/boot, /root and /home"]
-          )
-
           key(:boot_size).slider("Boot drive partition size (MiB):", min: 512, max: 4096, default: 1024, step: 128)
-
-          if partitions == "/boot, /root and /home"
-            key(:home_size).slider("Home partition size (MiB):", min: 2048, max: 8192, default: 4096, step: 256)
-          end
-
           key(:swap_size).slider("Swap partition size (MiB):", min: 1024, max: 8192, default: 2048, step: 256)
 
           if @@prompt.yes?("Enable encryption?", default: false)
             key(:encryption_settings) do
-              key(:encryption_mode).expand("Which cryptic setup to use?") do |q|
-                if partitions == "/boot, /root and /home"
-                  q.choice key: "m", name: "minimal (/home only)" do :minimal end
-                  q.choice key: "s", name: "safe (/home, /var, /tmp and swap)", value: :safe
-                end
-                q.choice key: "p", name: "paranoid (full disk encryption, except /boot)", value: :paranoid
-                q.choice key: "i", name: "insane (full disk encryption)", value: :insane if bootloader == "grub"
-              end
               key(:encryption_key).mask("Insert the encryption key:", required: true)
             end
           end
@@ -125,43 +107,51 @@ module Warding
 
         setup_partitions(data[:system_settings][:boot_size])
 
-        def setup_lvm(scheme, swap_size, home_size = false)
-          # create physical volume
-          `pvcreate /dev/sda2`
-          # create virtual group
-          `vgcreate vg0 /dev/sda2`
+        def setup_lvm(swap_size)
+          # setup encryption
+          if data[:system_settings][:encryption_settings]
+            # create an encrypted volume
+            `echo -e "YES\n#{data[:encryption_settings][:encryption_key]}\n#{data[:encryption_settings][:encryption_key]}" | arch-chroot /mnt cryptsetup luksFormat --type luks2 --cipher aes-xts-plain64 --key-size 512 /dev/sda2`
+            # open the volume
+            `cryptsetup open /dev/sda2 cryptlvm`
+            # setup lvm
+            `pvcreate /dev/mapper/cryptlvm`
+            # create virtual group
+            `vgcreate vg0 /dev/mapper/cryptlvm`
+          else
+            # create physical volume
+            `pvcreate /dev/sda2`
+            # create virtual group
+            `vgcreate vg0 /dev/sda2`
+          end
           # create logical volumes
           `lvcreate -L #{swap_size}Mib vg0 -n swap`
-          if scheme == "/boot, /root and /home"
-            `lvcreate -L #{home_size}Mib vg0 -n home`
-          end
           `lvcreate -l 100%FREE vg0 -n root`
-          # make and mount root fs
-          `mkfs.ext4 /dev/vg0/root`
-          `mount /dev/vg0/root /mnt`
-          # make and mount home folder
-          if scheme == "/boot, /root and /home"
-            `mkfs.ext4 /dev/vg0/home`
-            `mount /dev/vg0/home /mnt/home`
+          if data[:system_settings][:encryption_settings]
+            # make and mount encrypted rootfs
+            `mkfs.ext4 /dev/mapper/root`
+            `mount /dev/mapper/root /mnt`
+          else
+            # make and mount rootfs
+            `mkfs.ext4 /dev/vg0/root`
+            `mount /dev/vg0/root /mnt`
           end
           # make and mount boot partition
           `mkfs.fat -F32 /dev/sda1`
           `mkdir /mnt/boot`
-          if data[:system_settings][:bootloader] == "systemd-boot"
-            `mount /dev/sda1 /mnt/boot`
+          `mount /dev/sda1 /mnt/boot`
+          if data[:system_settings][:encryption_settings]
+            # setup swap
+            `mkswap /dev/mapper/swap`
+            `swapon /dev/mapper/swap`
           else
-            `mount /dev/sda1 /mnt/boot/efi`
+            # setup swap
+            `mkswap /dev/vg0/swap`
+            `swapon /dev/vg0/swap`
           end
-          # setup swap
-          `mkswap /dev/vg0/swap`
-          `swapon /dev/vg0/swap`
         end
 
-        if data[:system_settings][:partition] == "/boot, /root and /home"
-          setup_lvm(data[:system_settings][:partition], data[:system_settings][:swap_size], data[:system_settings[:home_size]])
-        else
-          setup_lvm(data[:system_settings][:partition], data[:system_settings][:swap_size])
-        end
+        setup_lvm(data[:system_settings][:swap_size])
 
         def setup_packages
           # update packages list
@@ -192,7 +182,12 @@ module Warding
           # update root password
           `echo -e "#{password}\n#{password}" | arch-chroot /mnt passwd`
           # update hooks
-          `sed -i "/^HOOK/s/filesystems/lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
+          if data[:system_settings][:encryption_settings]
+            `sed -i "/^HOOK/s/keymap/keyboard keymap/" /mnt/etc/mkinitcpio.conf`
+            `sed -i "/^HOOK/s/filesystems/encrypt lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
+          else
+            `sed -i "/^HOOK/s/filesystems/lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
+          end
           # recompile initramfs
           `arch-chroot /mnt mkinitcpio -p linux`
           # add intel microcode
@@ -201,24 +196,22 @@ module Warding
 
         setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password])
 
-        def setup_bootloader(loader)
+        def setup_bootloader()
           # setup systemd-boot
-          if loader == "systemd-boot"
-            `arch-chroot /mnt bootctl install`
-            `echo "title Warding Linux
-            linux /vmlinuz-linux
-            initrd /intel-ucode.img
-            initrd /initramfs-linux.img
-            options root=/dev/vg0/root rw" > /mnt/boot/loader/entries/warding.conf`
+          `arch-chroot /mnt bootctl install`
+          `echo "title Warding Linux
+          linux /vmlinuz-linux
+          initrd /intel-ucode.img
+          initrd /initramfs-linux.img" > /mnt/boot/loader/entries/warding.conf`
+          if data[:system_settings][:encryption_settings]
+            uuid = `blkid -s UUID -o value /dev/sda2`
+            `echo "options cryptdevice=UUID=#{uuid}:cryptlvm root=/dev/mapper/root quiet rw" >> /mnt/boot/loader/entries/warding.conf`
           else
-            # setup grub
-            `arch-chroot /mnt pacman -S grub efibootmgr --noconfirm`
-            `arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB`
-            `arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg`
+            `echo "options root=/dev/vg0/root rw" >> /mnt/boot/loader/entries/warding.conf`
           end
         end
 
-        setup_bootloader(data[:system_settings][:bootloader])
+        setup_bootloader
 
         def setup_usability
           # enable internet
