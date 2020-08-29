@@ -246,7 +246,7 @@ module Warding
 
         def setup_visuals(theme = "none")
           if theme == "none"
-            break
+            nil
           elsif theme == "kde"
             # install packages
             `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma konsole dolphin kmix sddm kvantum-qt5`
