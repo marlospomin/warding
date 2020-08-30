@@ -107,7 +107,7 @@ module Warding
 
         setup_partitions(data[:system_settings][:boot_size])
 
-        def setup_lvm(swap_size)
+        def setup_lvm(swap_size, key=nil)
           # setup encryption
           if data[:system_settings][:encryption_settings]
             # create an encrypted volume
@@ -127,7 +127,7 @@ module Warding
           # create logical volumes
           `lvcreate -L #{swap_size}Mib vg0 -n swap`
           `lvcreate -l 100%FREE vg0 -n root`
-          if data[:system_settings][:encryption_settings]
+          if key
             # make and mount encrypted rootfs
             `mkfs.ext4 /dev/mapper/root`
             `mount /dev/mapper/root /mnt`
@@ -140,7 +140,7 @@ module Warding
           `mkfs.fat -F32 /dev/sda1`
           `mkdir /mnt/boot`
           `mount /dev/sda1 /mnt/boot`
-          if data[:system_settings][:encryption_settings]
+          if key
             # setup swap
             `mkswap /dev/mapper/swap`
             `swapon /dev/mapper/swap`
@@ -151,7 +151,7 @@ module Warding
           end
         end
 
-        setup_lvm(data[:system_settings][:swap_size])
+        setup_lvm(data[:system_settings][:swap_size], data[:system_settings][:encryption_settings])
 
         def setup_packages
           # update packages list
@@ -164,7 +164,7 @@ module Warding
 
         setup_packages
 
-        def setup_chroot(lang, keymap, password)
+        def setup_chroot(lang, keymap, password, encrypted=false)
           # set timezone
           `arch-chroot /mnt ln -sf /usr/share/zoneinfo/"$(curl -s https://ipapi.co/timezone)" /etc/localtime`
           # update clock
@@ -182,7 +182,7 @@ module Warding
           # update root password
           `echo -e "#{password}\n#{password}" | arch-chroot /mnt passwd`
           # update hooks
-          if data[:system_settings][:encryption_settings]
+          if encrypted
             `sed -i "/^HOOK/s/keymap/keyboard keymap/" /mnt/etc/mkinitcpio.conf`
             `sed -i "/^HOOK/s/filesystems/encrypt lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
           else
@@ -194,16 +194,20 @@ module Warding
           `arch-chroot /mnt pacman -S intel-ucode --noconfirm`
         end
 
-        setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password])
+        if data[:system_settings][:encryption_settings]
+          setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password], true)
+        else
+          setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password])
+        end
 
-        def setup_bootloader()
+        def setup_bootloader(encrypted=false)
           # setup systemd-boot
           `arch-chroot /mnt bootctl install`
           `echo "title Warding Linux
           linux /vmlinuz-linux
           initrd /intel-ucode.img
           initrd /initramfs-linux.img" > /mnt/boot/loader/entries/warding.conf`
-          if data[:system_settings][:encryption_settings]
+          if encrypted
             uuid = `blkid -s UUID -o value /dev/sda2`
             `echo "options cryptdevice=UUID=#{uuid}:cryptlvm root=/dev/mapper/root quiet rw" >> /mnt/boot/loader/entries/warding.conf`
           else
@@ -211,7 +215,11 @@ module Warding
           end
         end
 
-        setup_bootloader
+        if data[:system_settings][:encryption_settings]
+          setup_bootloader(true)
+        else
+          setup_bootloader
+        end
 
         def setup_usability
           # enable internet
