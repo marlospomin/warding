@@ -109,7 +109,7 @@ module Warding
 
         def setup_lvm(swap_size, key=nil)
           # setup encryption
-          if data[:system_settings][:encryption_settings]
+          if key
             # create an encrypted volume
             `echo -e "YES\n#{data[:encryption_settings][:encryption_key]}\n#{data[:encryption_settings][:encryption_key]}" | arch-chroot /mnt cryptsetup luksFormat --type luks2 --cipher aes-xts-plain64 --key-size 512 /dev/sda2`
             # open the volume
