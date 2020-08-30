@@ -111,7 +111,7 @@ module Warding
           # setup encryption
           if key
             # create an encrypted volume
-            `echo -e "YES\n#{data[:encryption_settings][:encryption_key]}\n#{data[:encryption_settings][:encryption_key]}" | arch-chroot /mnt cryptsetup luksFormat --type luks2 --cipher aes-xts-plain64 --key-size 512 /dev/sda2`
+            `echo -e "YES\n#{key}\n#{key}" | arch-chroot /mnt cryptsetup luksFormat --type luks2 --cipher aes-xts-plain64 --key-size 512 /dev/sda2`
             # open the volume
             `cryptsetup open /dev/sda2 cryptlvm`
             # setup lvm
@@ -151,7 +151,7 @@ module Warding
           end
         end
 
-        setup_lvm(data[:system_settings][:swap_size], data[:system_settings][:encryption_settings])
+        setup_lvm(data[:system_settings][:swap_size], data[:system_settings][:encryption_settings][:encryption_key])
 
         def setup_packages
           # update packages list
