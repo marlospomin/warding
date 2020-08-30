@@ -235,7 +235,7 @@ module Warding
           # enable cron jobs
           `arch-chroot /mnt systemctl enable cronie`
           # change default shell
-          `arch-chroot /mnt chsh -s /usr/bin/zsh"`
+          `arch-chroot /mnt chsh -s /usr/bin/zsh`
           # setup blackarch's keyring
           `arch-chroot /mnt wget -q https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz`
           `arch-chroot /mnt wget -q https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz.sig`
