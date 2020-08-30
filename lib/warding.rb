@@ -151,7 +151,11 @@ module Warding
           end
         end
 
-        setup_lvm(data[:system_settings][:swap_size], data[:system_settings][:encryption_settings][:encryption_key])
+        if data[:system_settings][:encryption_settings]
+          setup_lvm(data[:system_settings][:swap_size], data[:system_settings][:encryption_settings][:encryption_key])
+        else
+          setup_lvm(data[:system_settings][:swap_size])
+        end
 
         def setup_packages
           # update packages list
