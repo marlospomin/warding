@@ -235,19 +235,20 @@ module Warding
           # enable cron jobs
           `arch-chroot /mnt systemctl enable cronie`
           # change default shell
-          `arch-chroot /mnt chsh -s $(which zsh)"`
+          `arch-chroot /mnt chsh -s /usr/bin/zsh"`
           # setup blackarch's keyring
-          `wget -q https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz{,.sig}`
-          `gpg --keyserver hkp://pgp.mit.edu --recv-keys 4345771566D76038C7FEB43863EC0ADBEA87E4E3 > /dev/null 2>&1`
-          `gpg --keyserver-options no-auto-key-retrieve --with-fingerprint blackarch-keyring.pkg.tar.xz.sig > /dev/null 2>&1`
-          `rm blackarch-keyring.pkg.tar.xz.sig`
-          `pacman-key --init`
-          `pacman --config /dev/null --noconfirm -U blackarch-keyring.pkg.tar.xz`
-          `pacman-key --populate`
+          `arch-chroot /mnt wget -q https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz`
+          `arch-chroot /mnt wget -q https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz.sig`
+          `arch-chroot /mnt gpg --keyserver hkp://pgp.mit.edu --recv-keys 4345771566D76038C7FEB43863EC0ADBEA87E4E3 > /dev/null 2>&1`
+          `arch-chroot /mnt gpg --keyserver-options no-auto-key-retrieve --with-fingerprint blackarch-keyring.pkg.tar.xz.sig > /dev/null 2>&1`
+          `arch-chroot /mnt rm blackarch-keyring.pkg.tar.xz.sig`
+          `arch-chroot /mnt pacman-key --init`
+          `arch-chroot /mnt pacman --config /dev/null --noconfirm -U blackarch-keyring.pkg.tar.xz`
+          `arch-chroot /mnt pacman-key --populate`
           # update package list
-          `pacman -Syy`
+          `arch-chroot /mnt pacman -Syy`
           # check if on VM
-          if `dmidecode -s system-manufacturer`.include?("VMware, Inc.")
+          if `arch-chroot /mnt dmidecode -s system-manufacturer`.include?("VMware, Inc.")
             # install and enable VMware utils
             `arch-chroot /mnt pacman -S openvpn-vm-tools --noconfirm`
             `arch-chroot /mnt systemctl enable vmtoolsd`
