@@ -107,7 +107,7 @@ module Warding
 
         setup_partitions(data[:system_settings][:boot_size])
 
-        def setup_lvm(swap_size, key=nil)
+        def setup_lvm(swap_size, key=false)
           # setup encryption
           if key
             # create an encrypted volume
