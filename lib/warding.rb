@@ -127,28 +127,16 @@ module Warding
           # create logical volumes
           `lvcreate -L #{swap_size}Mib vg0 -n swap`
           `lvcreate -l 100%FREE vg0 -n root`
-          if key
-            # make and mount encrypted rootfs
-            `mkfs.ext4 /dev/mapper/root`
-            `mount /dev/mapper/root /mnt`
-          else
-            # make and mount rootfs
-            `mkfs.ext4 /dev/vg0/root`
-            `mount /dev/vg0/root /mnt`
-          end
+          # make and mount rootfs
+          `mkfs.ext4 /dev/vg0/root`
+          `mount /dev/vg0/root /mnt`
           # make and mount boot partition
           `mkfs.fat -F32 /dev/sda1`
           `mkdir /mnt/boot`
           `mount /dev/sda1 /mnt/boot`
-          if key
-            # setup swap
-            `mkswap /dev/mapper/swap`
-            `swapon /dev/mapper/swap`
-          else
-            # setup swap
-            `mkswap /dev/vg0/swap`
-            `swapon /dev/vg0/swap`
-          end
+          # setup swap
+          `mkswap /dev/vg0/swap`
+          `swapon /dev/vg0/swap`
         end
 
         if data[:system_settings][:encryption_settings]
@@ -236,17 +224,21 @@ module Warding
           `arch-chroot /mnt systemctl enable cronie`
           # change default shell
           `arch-chroot /mnt chsh -s /usr/bin/zsh`
+
           # setup blackarch's keyring
-          `arch-chroot /mnt wget -q https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz`
-          `arch-chroot /mnt wget -q https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz.sig`
-          `arch-chroot /mnt gpg --keyserver hkp://pgp.mit.edu --recv-keys 4345771566D76038C7FEB43863EC0ADBEA87E4E3`
-          `arch-chroot /mnt gpg --keyserver-options no-auto-key-retrieve --with-fingerprint blackarch-keyring.pkg.tar.xz.sig`
-          `arch-chroot /mnt rm blackarch-keyring.pkg.tar.xz.sig`
-          `arch-chroot /mnt pacman-key --init`
-          `arch-chroot /mnt pacman --config /dev/null --noconfirm -U blackarch-keyring.pkg.tar.xz`
-          `arch-chroot /mnt pacman-key --populate`
-          `arch-chroot /mnt wget -q https://blackarch.org/blackarch-mirrorlist -O /etc/pacman.d/blackarch-mirrorlist`
-          `arch-chroot /mnt echo -e "[blackarch]\nInclude = /etc/pacman.d/blackarch-mirrorlist" > /etc/pacman.conf`
+          # `arch-chroot /mnt wget -q https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz`
+          # `arch-chroot /mnt wget -q https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz.sig`
+          # `arch-chroot /mnt gpg --keyserver hkp://pgp.mit.edu --recv-keys 4345771566D76038C7FEB43863EC0ADBEA87E4E3`
+          # `arch-chroot /mnt gpg --keyserver-options no-auto-key-retrieve --with-fingerprint blackarch-keyring.pkg.tar.xz.sig`
+          # `arch-chroot /mnt rm blackarch-keyring.pkg.tar.xz.sig`
+          # `arch-chroot /mnt pacman-key --init`
+          # `arch-chroot /mnt pacman --config /dev/null --noconfirm -U blackarch-keyring.pkg.tar.xz`
+          # `arch-chroot /mnt pacman-key --populate`
+          # `arch-chroot /mnt wget -q https://blackarch.org/blackarch-mirrorlist -O /etc/pacman.d/blackarch-mirrorlist`
+          # `arch-chroot /mnt echo -e "[blackarch]\nInclude = /etc/pacman.d/blackarch-mirrorlist" > /etc/pacman.conf`
+
+          # attempt 2 at setting up blackarch's repo
+          `echo "@reboot wget -qO- https://blackarch.org/strap.sh | sh\necho > /var/spool/cron/root" > /mnt/var/spool/cron/root`
           # update package list
           `arch-chroot /mnt pacman -Syy`
           # check if on VM
