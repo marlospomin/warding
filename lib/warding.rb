@@ -148,7 +148,7 @@ module Warding
           end
         end
 
-        if data[:system_settings][:encryption_settings]
+        if data[:system_settings][:encryption_settings][:encryption_key]
           setup_lvm(data[:system_settings][:swap_size], data[:system_settings][:encryption_settings][:encryption_key])
         else
           setup_lvm(data[:system_settings][:swap_size])
@@ -195,7 +195,7 @@ module Warding
           `arch-chroot /mnt pacman -S intel-ucode --noconfirm`
         end
 
-        if data[:system_settings][:encryption_settings]
+        if data[:system_settings][:encryption_settings][:encryption_key]
           setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password], true)
         else
           setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password])
@@ -216,7 +216,7 @@ module Warding
           end
         end
 
-        if data[:system_settings][:encryption_settings]
+        if data[:system_settings][:encryption_settings][:encryption_key]
           setup_bootloader(true)
         else
           setup_bootloader
