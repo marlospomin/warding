@@ -111,9 +111,9 @@ module Warding
           # setup encryption
           if key
             # create an encrypted volume
-            `echo -e "YES\n#{key}\n#{key}" | arch-chroot /mnt cryptsetup luksFormat --type luks2 --cipher aes-xts-plain64 --key-size 512 /dev/sda2`
+            `echo -e "YES\n#{key}\n#{key}" | cryptsetup luksFormat --type luks2 --cipher aes-xts-plain64 --key-size 512 /dev/sda2`
             # open the volume
-            `cryptsetup open /dev/sda2 cryptlvm`
+            `echo -e "#{key}\n" | cryptsetup open /dev/sda2 cryptlvm`
             # setup lvm
             `pvcreate /dev/mapper/cryptlvm`
             # create virtual group
@@ -233,10 +233,8 @@ module Warding
           `arch-chroot /mnt systemctl enable cronie`
           # change default shell
           `arch-chroot /mnt chsh -s /usr/bin/zsh`
-
           # setup blackarch's keyring
-          `arch-chroot /mnt wget -q https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz`
-          `arch-chroot /mnt wget -q https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz.sig`
+          `arch-chroot /mnt curl -s -O https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz`
           `arch-chroot /mnt gpg --keyserver hkp://pgp.mit.edu --recv-keys 4345771566D76038C7FEB43863EC0ADBEA87E4E3`
           `arch-chroot /mnt gpg --keyserver-options no-auto-key-retrieve --with-fingerprint blackarch-keyring.pkg.tar.xz.sig`
           `arch-chroot /mnt rm blackarch-keyring.pkg.tar.xz.sig`
@@ -244,7 +242,7 @@ module Warding
           `arch-chroot /mnt pacman --config /dev/null --noconfirm -U blackarch-keyring.pkg.tar.xz`
           `arch-chroot /mnt pacman-key --populate`
           `arch-chroot /mnt wget -q https://blackarch.org/blackarch-mirrorlist -O /etc/pacman.d/blackarch-mirrorlist`
-          `arch-chroot /mnt echo -e "[blackarch]\nInclude = /etc/pacman.d/blackarch-mirrorlist" > /etc/pacman.conf`
+          `arch-chroot /mnt echo -e "[blackarch]\nInclude = /etc/pacman.d/blackarch-mirrorlist" >> /etc/pacman.conf`
           # update package list
           `arch-chroot /mnt pacman -Syy`
           # check if on VM
