@@ -113,7 +113,7 @@ module Warding
             # create an encrypted volume
             `echo "#{key}" | cryptsetup -q luksFormat --type luks2 --cipher aes-xts-plain64 --key-size 512 /dev/sda2`
             # open the volume
-            `echo "#{key}" | cryptsetup open /dev/sda2 cryptlvm -d -`
+            `echo "#{key}" | cryptsetup open /dev/sda2 cryptlvm -`
             # setup lvm
             `pvcreate /dev/mapper/cryptlvm`
             # create virtual group
