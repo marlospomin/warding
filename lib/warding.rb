@@ -132,12 +132,12 @@ module Warding
           `mkdir /mnt/boot`
           `mount /dev/sda1 /mnt/boot`
           if key
-          # make and mount rootfs
-          `mkfs.ext4 /dev/vg0/root`
-          `mount /dev/vg0/root /mnt`
-          # setup swap
-          `mkswap /dev/vg0/swap`
-          `swapon /dev/vg0/swap`
+            # make and mount rootfs
+            `mkfs.ext4 /dev/vg0/root`
+            `mount /dev/vg0/root /mnt`
+            # setup swap
+            `mkswap /dev/vg0/swap`
+            `swapon /dev/vg0/swap`
           else
             # make and mount rootfs
             `mkfs.ext4 /dev/mapper/root`
@@ -184,7 +184,7 @@ module Warding
           `echo -e "#{password}\n#{password}" | arch-chroot /mnt passwd`
           # update hooks
           if encrypted
-            `sed -i "/^HOOK/s/keymap/keyboard keymap/" /mnt/etc/mkinitcpio.conf`
+            `sed -i "/^HOOK/s/modconf/keyboard keymap consolefont modconf/" /mnt/etc/mkinitcpio.conf`
             `sed -i "/^HOOK/s/filesystems/encrypt lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
           else
             `sed -i "/^HOOK/s/filesystems/lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
@@ -210,7 +210,7 @@ module Warding
           initrd /initramfs-linux.img" > /mnt/boot/loader/entries/warding.conf`
           if encrypted
             uuid = `blkid -s UUID -o value /dev/sda2`
-            `echo "options cryptdevice=UUID=#{uuid}:cryptlvm root=/dev/mapper/root quiet rw" >> /mnt/boot/loader/entries/warding.conf`
+            `echo "options cryptdevice=UUID=#{uuid}:cryptlvm root=/dev/vg0/root quiet rw" >> /mnt/boot/loader/entries/warding.conf`
           else
             `echo "options root=/dev/vg0/root rw" >> /mnt/boot/loader/entries/warding.conf`
           end
@@ -234,8 +234,8 @@ module Warding
           # change default shell
           `arch-chroot /mnt chsh -s /usr/bin/zsh`
           # setup blackarch's keyring
-          `arch-chroot /mnt curl -s -O https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz`
-          `arch-chroot /mnt gpg --keyserver hkp://pgp.mit.edu --recv-keys 4345771566D76038C7FEB43863EC0ADBEA87E4E3`
+          `arch-chroot /mnt curl -s -O https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz{,.sig}`
+          `arch-chroot /mnt gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 4345771566D76038C7FEB43863EC0ADBEA87E4E3`
           `arch-chroot /mnt gpg --keyserver-options no-auto-key-retrieve --with-fingerprint blackarch-keyring.pkg.tar.xz.sig`
           `arch-chroot /mnt rm blackarch-keyring.pkg.tar.xz.sig`
           `arch-chroot /mnt pacman-key --init`
