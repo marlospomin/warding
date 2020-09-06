@@ -109,9 +109,9 @@ module Warding
 
         setup_partitions(data[:system_settings][:boot_size])
 
-        def setup_lvm(swap_size, encrypted=false)
+        def setup_lvm(swap_size, key=false)
           # setup encryption
-          if encrypted
+          if key
             # create an encrypted volume
             `echo "#{key}" | cryptsetup -q luksFormat --type luks2 --cipher aes-xts-plain64 --key-size 512 /dev/sda2`
             # open the volume
@@ -133,7 +133,7 @@ module Warding
           `mkfs.fat -F32 /dev/sda1`
           `mkdir /mnt/boot`
           `mount /dev/sda1 /mnt/boot`
-          if encrypted
+          if key
             # make and mount rootfs
             `mkfs.ext4 /dev/vg0/root`
             `mount /dev/vg0/root /mnt`
