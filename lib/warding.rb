@@ -57,6 +57,8 @@ module Warding
           key(:swap_size).slider("Swap partition size (MiB):", min: 1024, max: 8192, default: 2048, step: 256)
 
           if @@prompt.yes?("Enable encryption?", default: false)
+            @@encrypted = true
+
             key(:encryption_settings) do
               key(:encryption_key).mask("Insert the encryption key:", required: true)
             end
@@ -107,9 +109,9 @@ module Warding
 
         setup_partitions(data[:system_settings][:boot_size])
 
-        def setup_lvm(swap_size, key=false)
+        def setup_lvm(swap_size, encrypted=false)
           # setup encryption
-          if key
+          if encrypted
             # create an encrypted volume
             `echo "#{key}" | cryptsetup -q luksFormat --type luks2 --cipher aes-xts-plain64 --key-size 512 /dev/sda2`
             # open the volume
@@ -131,7 +133,7 @@ module Warding
           `mkfs.fat -F32 /dev/sda1`
           `mkdir /mnt/boot`
           `mount /dev/sda1 /mnt/boot`
-          if key
+          if encrypted
             # make and mount rootfs
             `mkfs.ext4 /dev/vg0/root`
             `mount /dev/vg0/root /mnt`
@@ -148,7 +150,7 @@ module Warding
           end
         end
 
-        if data[:system_settings][:encryption_settings][:encryption_key]
+        if @@encrypted
           setup_lvm(data[:system_settings][:swap_size], data[:system_settings][:encryption_settings][:encryption_key])
         else
           setup_lvm(data[:system_settings][:swap_size])
@@ -184,7 +186,7 @@ module Warding
           `echo -e "#{password}\n#{password}" | arch-chroot /mnt passwd`
           # update hooks
           if encrypted
-            `sed -i "/^HOOK/s/modconf/keyboard keymap consolefont modconf/" /mnt/etc/mkinitcpio.conf`
+            `sed -i "/^HOOK/s/modconf/keyboard keymap modconf/" /mnt/etc/mkinitcpio.conf`
             `sed -i "/^HOOK/s/filesystems/encrypt lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
           else
             `sed -i "/^HOOK/s/filesystems/lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
@@ -195,7 +197,7 @@ module Warding
           `arch-chroot /mnt pacman -S intel-ucode --noconfirm`
         end
 
-        if data[:system_settings][:encryption_settings][:encryption_key]
+        if @@encrypted
           setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password], true)
         else
           setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password])
@@ -203,20 +205,20 @@ module Warding
 
         def setup_bootloader(encrypted=false)
           # setup systemd-boot
-          `arch-chroot /mnt bootctl install`
+          `bootctl install --esp-path=/mnt/boot`
           `echo "title Warding Linux
           linux /vmlinuz-linux
           initrd /intel-ucode.img
           initrd /initramfs-linux.img" > /mnt/boot/loader/entries/warding.conf`
           if encrypted
             uuid = `blkid -s UUID -o value /dev/sda2`
-            `echo "options cryptdevice=UUID=#{uuid}:cryptlvm root=/dev/vg0/root quiet rw" >> /mnt/boot/loader/entries/warding.conf`
+            `echo "options cryptdevice=UUID=#{uuid}:cryptlvm root=/dev/mapper/vg0-root quiet rw" >> /mnt/boot/loader/entries/warding.conf`
           else
             `echo "options root=/dev/vg0/root rw" >> /mnt/boot/loader/entries/warding.conf`
           end
         end
 
-        if data[:system_settings][:encryption_settings][:encryption_key]
+        if @@encrypted
           setup_bootloader(true)
         else
           setup_bootloader
