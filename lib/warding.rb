@@ -57,8 +57,6 @@ module Warding
           key(:swap_size).slider("Swap partition size (MiB):", min: 1024, max: 8192, default: 2048, step: 256)
 
           if @@prompt.yes?("Enable encryption?", default: false)
-            @@encrypted = true
-
             key(:encryption_settings) do
               key(:encryption_key).mask("Insert the encryption key:", required: true)
             end
@@ -71,7 +69,7 @@ module Warding
       parsed_input
     end
 
-    def install(data)
+    def install(data, encrypted=false)
       if @@prompt.yes?("Confirm settings and continue?")
 
         @@prompt.say("Installing, please wait...")
@@ -141,7 +139,7 @@ module Warding
           `swapon /dev/vg0/swap`
         end
 
-        if @@encrypted
+        if encrypted
           setup_lvm(data[:system_settings][:swap_size], data[:system_settings][:encryption_settings][:encryption_key])
         else
           setup_lvm(data[:system_settings][:swap_size])
@@ -188,7 +186,7 @@ module Warding
           `arch-chroot /mnt pacman -S intel-ucode --noconfirm`
         end
 
-        if @@encrypted
+        if encrypted
           setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password], true)
         else
           setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password])
@@ -209,7 +207,7 @@ module Warding
           end
         end
 
-        if @@encrypted
+        if encrypted
           setup_bootloader(true)
         else
           setup_bootloader
