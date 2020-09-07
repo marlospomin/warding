@@ -57,6 +57,7 @@ module Warding
           key(:swap_size).slider("Swap partition size (MiB):", min: 1024, max: 8192, default: 2048, step: 256)
 
           if @@prompt.yes?("Enable encryption?", default: false)
+            @encrypted = true
             key(:encryption_settings) do
               key(:encryption_key).mask("Insert the encryption key:", required: true)
             end
