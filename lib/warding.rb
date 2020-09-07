@@ -133,21 +133,12 @@ module Warding
           `mkfs.fat -F32 /dev/sda1`
           `mkdir /mnt/boot`
           `mount /dev/sda1 /mnt/boot`
-          if key
-            # make and mount rootfs
-            `mkfs.ext4 /dev/vg0/root`
-            `mount /dev/vg0/root /mnt`
-            # setup swap
-            `mkswap /dev/vg0/swap`
-            `swapon /dev/vg0/swap`
-          else
-            # make and mount rootfs
-            `mkfs.ext4 /dev/mapper/root`
-            `mount /dev/mapper/root /mnt`
-            # setup swap
-            `mkswap /dev/mapper/swap`
-            `swapon /dev/mapper/swap`
-          end
+          # make and mount rootfs
+          `mkfs.ext4 /dev/vg0/root`
+          `mount /dev/vg0/root /mnt`
+          # setup swap
+          `mkswap /dev/vg0/swap`
+          `swapon /dev/vg0/swap`
         end
 
         if @@encrypted
@@ -192,7 +183,7 @@ module Warding
             `sed -i "/^HOOK/s/filesystems/lvm2 filesystems/" /mnt/etc/mkinitcpio.conf`
           end
           # recompile initramfs
-          `arch-chroot /mnt mkinitcpio -p linux`
+          `arch-chroot /mnt mkinitcpio -P`
           # add intel microcode
           `arch-chroot /mnt pacman -S intel-ucode --noconfirm`
         end
@@ -212,7 +203,7 @@ module Warding
           initrd /initramfs-linux.img" > /mnt/boot/loader/entries/warding.conf`
           if encrypted
             uuid = `blkid -s UUID -o value /dev/sda2`
-            `echo "options cryptdevice=UUID=#{uuid}:cryptlvm root=/dev/mapper/vg0-root quiet rw" >> /mnt/boot/loader/entries/warding.conf`
+            `echo "options cryptdevice=UUID=#{uuid}:cryptlvm root=/dev/vg0/root quiet rw" >> /mnt/boot/loader/entries/warding.conf`
           else
             `echo "options root=/dev/vg0/root rw" >> /mnt/boot/loader/entries/warding.conf`
           end
