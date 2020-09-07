@@ -225,11 +225,11 @@ module Warding
           `arch-chroot /mnt chsh -s /usr/bin/zsh`
           # setup blackarch's keyring
           `arch-chroot /mnt curl -s -O https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz{,.sig}`
-          `arch-chroot /mnt gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 4345771566D76038C7FEB43863EC0ADBEA87E4E3`
+          `arch-chroot /mnt gpg --keyserver hkp://pgp.mit.edu --recv-keys 4345771566D76038C7FEB43863EC0ADBEA87E4E3`
           `arch-chroot /mnt gpg --keyserver-options no-auto-key-retrieve --with-fingerprint blackarch-keyring.pkg.tar.xz.sig`
-          `arch-chroot /mnt rm blackarch-keyring.pkg.tar.xz.sig`
           `arch-chroot /mnt pacman-key --init`
-          `arch-chroot /mnt pacman --config /dev/null --noconfirm -U blackarch-keyring.pkg.tar.xz`
+          `arch-chroot /mnt rm blackarch-keyring.pkg.tar.xz.sig`
+          `arch-chroot /mnt pacman --noconfirm -U blackarch-keyring.pkg.tar.xz`
           `arch-chroot /mnt pacman-key --populate`
           `arch-chroot /mnt curl -s https://blackarch.org/blackarch-mirrorlist -o /etc/pacman.d/blackarch-mirrorlist`
           `echo "[blackarch]\nInclude = /etc/pacman.d/blackarch-mirrorlist" >> /mnt/etc/pacman.conf`
