@@ -12,7 +12,7 @@ warding.check
 # gather inputs from the user
 user_input = warding.gather
 # install warding
-if user_input.encrypted
+if user_input[:system_settings][:encrypted]
   warding.install(user_input, true)
 else
   warding.install(user_input)
