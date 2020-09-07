@@ -127,13 +127,13 @@ module Warding
           # create logical volumes
           `lvcreate -L #{swap_size}Mib vg0 -n swap`
           `lvcreate -l 100%FREE vg0 -n root`
+          # make and mount rootfs
+          `mkfs.ext4 /dev/vg0/root`
+          `mount /dev/vg0/root /mnt`
           # make and mount boot partition
           `mkfs.fat -F32 /dev/sda1`
           `mkdir /mnt/boot`
           `mount /dev/sda1 /mnt/boot`
-          # make and mount rootfs
-          `mkfs.ext4 /dev/vg0/root`
-          `mount /dev/vg0/root /mnt`
           # setup swap
           `mkswap /dev/vg0/swap`
           `swapon /dev/vg0/swap`
