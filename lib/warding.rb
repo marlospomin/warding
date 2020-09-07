@@ -201,7 +201,7 @@ module Warding
           initrd /initramfs-linux.img" > /mnt/boot/loader/entries/warding.conf`
           if encrypted
             uuid = `blkid -s UUID -o value /dev/sda2`
-            `echo "options cryptdevice=UUID=#{uuid}:cryptlvm root=/dev/vg0/root quiet rw" >> /mnt/boot/loader/entries/warding.conf`
+            `echo "options cryptdevice=UUID=#{uuid}:cryptlvm:allow-discards root=/dev/mapper/vg0-root quiet rw" >> /mnt/boot/loader/entries/warding.conf`
           else
             `echo "options root=/dev/vg0/root rw" >> /mnt/boot/loader/entries/warding.conf`
           end
