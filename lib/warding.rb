@@ -160,7 +160,7 @@ module Warding
           # update packages list
           `pacman -Syy`
           # install base system
-          `pacstrap /mnt base base-devel linux linux-firmware lvm2 mkinitcpio dmidecode reflector networkmanager cronie man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
+          `pacstrap /mnt base base-devel linux linux-firmware linux-headers lvm2 mkinitcpio dmidecode reflector networkmanager cronie man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
           # generate fstab
           `genfstab -U /mnt >> /mnt/etc/fstab`
         end
@@ -205,7 +205,7 @@ module Warding
 
         def setup_bootloader(encrypted=false)
           # setup systemd-boot
-          `bootctl install --esp-path=/mnt/boot`
+          `arch-chroot /mnt bootctl install`
           `echo "title Warding Linux
           linux /vmlinuz-linux
           initrd /intel-ucode.img
