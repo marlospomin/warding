@@ -231,6 +231,7 @@ module Warding
           `arch-chroot /mnt rm blackarch-keyring.pkg.tar.xz.sig`
           `arch-chroot /mnt pacman --noconfirm -U blackarch-keyring.pkg.tar.xz`
           `arch-chroot /mnt pacman-key --populate`
+          `arch-chroot /mnt rm blackarch-keyring.pkg.tar.xz`
           `arch-chroot /mnt curl -s https://blackarch.org/blackarch-mirrorlist -o /etc/pacman.d/blackarch-mirrorlist`
           `echo "[blackarch]\nInclude = /etc/pacman.d/blackarch-mirrorlist" >> /mnt/etc/pacman.conf`
           # update package list
