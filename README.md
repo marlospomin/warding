@@ -10,11 +10,17 @@ Install warding by using the `gem install` command.
 gem install warding
 ```
 
+Or use the quick install method:
+
+```bash
+wget -qO- https://raw.githubusercontent/marlospomin/warding/master/debug/quick-install.sh | sh
+```
+
 ## Usage
 
 1. Download Arch Linux.
-2. Boot from the live ISO.
-3. Install warding (Ruby may also be required).
+2. Boot the live ISO.
+3. Install warding either from source or with the gem command.
 4. Run the binary executable `warding` and fill in the prompts.
 5. Enjoy.
 
