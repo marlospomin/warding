@@ -251,7 +251,7 @@ module Warding
             nil
           elsif theme == "plasma"
             # install packages
-            `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma konsole dolphin kmix sddm kvantum-qt5`
+            `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma konsole dolphin kmix sddm kvantum-qt5 --noc`
             # create conf dir
             `mkdir -p /mnt/etc/sddm.conf.d`
             # fix theme
@@ -262,7 +262,7 @@ module Warding
             `arch-chroot /mnt systemctl enable sddm`
           else
             # install packages
-            `arch-chroot /mnt pacman -S xf86-video-intel gnome`
+            `arch-chroot /mnt pacman -S xf86-video-intel gnome --noc`
             # enable gdm
             `arch-chroot /mnt systemctl enable gdm`
           end
