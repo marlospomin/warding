@@ -239,7 +239,7 @@ module Warding
           # check if on VM
           if `arch-chroot /mnt dmidecode -s system-manufacturer`.include?("VMware, Inc.")
             # install and enable VMware utils
-            `arch-chroot /mnt pacman -S openvpn-vm-tools --noconfirm`
+            `arch-chroot /mnt pacman -S open-vm-tools --noconfirm`
             `arch-chroot /mnt systemctl enable vmtoolsd`
           end
         end
@@ -249,7 +249,7 @@ module Warding
         def setup_visuals(theme = "none")
           if theme == "none"
             nil
-          elsif theme == "kde"
+          elsif theme == "plasma"
             # install packages
             `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma konsole dolphin kmix sddm kvantum-qt5`
             # create conf dir

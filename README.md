@@ -13,7 +13,9 @@ gem install warding
 Or use the quick install method:
 
 ```bash
-wget -qO- https://raw.githubusercontent/marlospomin/warding/master/debug/quick-install.sh | sh
+wget -qO- https://raw.githubusercontent/marlospomin/warding/master/debug/quick-install.sh
+export PATH="`ruby -e 'puts Gem.user_dir'`/bin:$PATH"
+warding
 ```
 
 ## Usage
