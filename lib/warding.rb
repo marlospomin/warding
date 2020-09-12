@@ -251,7 +251,7 @@ module Warding
             nil
           elsif theme == "plasma"
             # install packages
-            `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma-meta konsole dolphin kmix sddm kvantum-qt5 --noc`
+            `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma-meta gtkmm konsole dolphin kmix sddm kvantum-qt5 --noc`
             # create conf dir
             `mkdir -p /mnt/etc/sddm.conf.d`
             # fix theme
