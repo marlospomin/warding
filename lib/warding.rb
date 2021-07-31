@@ -229,7 +229,7 @@ module Warding
             # fix theme
             `echo "[Theme]\nCurrent=breeze" > /mnt/etc/sddm.conf.d/theme.conf`
             # enable autologin
-            `echo "[Autologin]\nUser=ward\nSession=plasma" > /mnt/etc/sddm.conf.d/login.conf`
+            `echo "[Autologin]\nUser=ward\nSession=plasma" > /mnt/etc/sddm.conf.d/autologin.conf`
             # enable sddm
             `arch-chroot /mnt systemctl enable sddm`
           when "gnome"
