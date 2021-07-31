@@ -63,7 +63,7 @@ module Warding
           end
         end
 
-        key(:desktop_environment).select("Select your desktop environment:", %w[plasma gnome none])
+        key(:desktop_environment).select("Select your desktop environment:", %w[plasma gnome i3 none])
       end
 
       parsed_input
