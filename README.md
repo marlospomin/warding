@@ -14,8 +14,6 @@ Or use the quick install method:
 
 ```bash
 wget -qO- https://raw.githubusercontent.com/marlospomin/warding/master/debug/quick-install.sh | sh
-export PATH="`ruby -e 'puts Gem.user_dir'`/bin:$PATH"
-warding
 ```
 
 ## Usage
