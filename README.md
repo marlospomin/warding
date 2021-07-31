@@ -26,15 +26,6 @@ warding
 4. Run the binary executable `warding` and fill in the prompts.
 5. Enjoy.
 
-## Tasklist
-
-* Refactor.
-* Suppress outputs.
-* Add extra checks.
-* Add user option.
-* Add AUR.
-* Update desktop environments.
-
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/marlospomin/warding.
