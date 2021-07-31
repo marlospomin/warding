@@ -206,7 +206,7 @@ module Warding
           `arch-chroot /mnt pacman -S alsa-utils alsa-plugins alsa-lib --noc`
           # update package list
           `arch-chroot /mnt pacman -Syy`
-          # user creation
+          # user creation --fix
           `arch-chroot /mnt useradd -m -g wheel -s /bin/zsh ward`
           `arch-chroot /mnt sed -i 's/^#\s*\(%wheel\s*ALL=(ALL)\s*NOPASSWD:\s*ALL\)/\1/' /etc/sudoers`
           `arch-chroot /mnt sudo -u ward git clone https://aur.archlinux.org/yay.git; cd yay; makepkg -si; yay -S yay`
