@@ -261,21 +261,17 @@ module Warding
           `umount -R /mnt`
           `reboot`
         end
-
-        def run
-          setup_mirrors if data[:update_mirrors]
-          data[:update_timezone] ? setup_timezone(data[:update_timezone]) : setup_timezone
-          setup_partitions(data[:system_settings][:boot_size])
-          data[:system_settings][:encrypted] ? setup_lvm(data[:system_settings][:swap_size], data[:system_settings][:encryption_settings][:encryption_key]) : setup_lvm(data[:system_settings][:swap_size])
-          setup_packages
-          data[:system_settings][:encrypted] ? setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password], true) : setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password])
-          data[:system_settings][:encrypted] ? setup_bootloader(true) : setup_bootloader
-          setup_usability
-          setup_visuals(data[:desktop_environment])
-          finish
-        end
-
-        run
+        
+        setup_mirrors if data[:update_mirrors]
+        data[:update_timezone] ? setup_timezone(data[:update_timezone]) : setup_timezone
+        setup_partitions(data[:system_settings][:boot_size])
+        data[:system_settings][:encrypted] ? setup_lvm(data[:system_settings][:swap_size], data[:system_settings][:encryption_settings][:encryption_key]) : setup_lvm(data[:system_settings][:swap_size])
+        setup_packages
+        data[:system_settings][:encrypted] ? setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password], true) : setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password])
+        data[:system_settings][:encrypted] ? setup_bootloader(true) : setup_bootloader
+        setup_usability
+        setup_visuals(data[:desktop_environment])
+        finish
       end
     end
   end
