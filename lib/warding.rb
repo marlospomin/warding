@@ -210,9 +210,9 @@ module Warding
           `echo "[blackarch]\nInclude = /etc/pacman.d/blackarch-mirrorlist" >> /mnt/etc/pacman.conf`
           # setup wordlists
           `arch-chroot /mnt mkdir -p /usr/share/wordlists`
-          `arch-chroot /mnt curl https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/raft-large-directories-lowercase.txt -o /usr/share/wordlists`
-          `arch-chroot /mnt curl https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/common.txt -o /usr/share/wordlists`
-          `arch-chroot /mnt curl https://github.com/danielmiessler/SecLists/raw/master/Passwords/Leaked-Databases/rockyou.txt.tar.gz -o /usr/share/wordlists`
+          `arch-chroot /mnt curl -s https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/raft-large-directories-lowercase.txt -o /usr/share/wordlists`
+          `arch-chroot /mnt curl -s https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/common.txt -o /usr/share/wordlists`
+          `arch-chroot /mnt curl -s https://github.com/danielmiessler/SecLists/raw/master/Passwords/Leaked-Databases/rockyou.txt.tar.gz -o /usr/share/wordlists`
           # setup drivers
           `arch-chroot /mnt pacman -S alsa-utils alsa-plugins alsa-lib --noc`
           # update package list
