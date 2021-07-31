@@ -32,7 +32,7 @@ module Warding
       end
 
       unless `[ -d /sys/firmware/efi ] && echo true`.include?("true")
-        @@prompt.error("UEFI/EFI must be enabled to install warding")
+        @@prompt.error("UEFI/EFI must be enabled to install warding.")
         exit!
       end
     end
@@ -76,10 +76,8 @@ module Warding
 
         def setup_mirrors
           # update mirrorlist
-          `reflector --latest 25 --sort rate --save /etc/pacman.d/mirrorlist`
+          `reflector --latest 100 --sort rate --save /etc/pacman.d/mirrorlist`
         end
-
-        setup_mirrors if data[:update_mirrors]
 
         def setup_timezone(timezone = false)
           # set clock
@@ -92,8 +90,6 @@ module Warding
           end
         end
 
-        data[:update_timezone] ? setup_timezone(data[:update_timezone]) : setup_timezone
-
         def setup_partitions(boot_size)
           # create partitions
           `parted -s -a optimal /dev/sda \
@@ -104,8 +100,6 @@ module Warding
             set 2 lvm on
           `
         end
-
-        setup_partitions(data[:system_settings][:boot_size])
 
         def setup_lvm(swap_size, key=false)
           # setup encryption
@@ -139,12 +133,6 @@ module Warding
           `swapon /dev/vg0/swap`
         end
 
-        if encrypted
-          setup_lvm(data[:system_settings][:swap_size], data[:system_settings][:encryption_settings][:encryption_key])
-        else
-          setup_lvm(data[:system_settings][:swap_size])
-        end
-
         def setup_packages
           # update packages list
           `pacman -Syy`
@@ -153,8 +141,6 @@ module Warding
           # generate fstab
           `genfstab -U /mnt >> /mnt/etc/fstab`
         end
-
-        setup_packages
 
         def setup_chroot(lang, keymap, password, encrypted=false)
           # set timezone
@@ -186,12 +172,6 @@ module Warding
           `arch-chroot /mnt pacman -S intel-ucode --noconfirm`
         end
 
-        if encrypted
-          setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password], true)
-        else
-          setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password])
-        end
-
         def setup_bootloader(encrypted=false)
           # setup systemd-boot
           `arch-chroot /mnt bootctl install`
@@ -206,17 +186,11 @@ module Warding
           end
         end
 
-        if encrypted
-          setup_bootloader(true)
-        else
-          setup_bootloader
-        end
-
         def setup_usability
           # enable internet
           `arch-chroot /mnt systemctl enable NetworkManager`
           # add cron jobs
-          `echo "#!/bin/bash\nreflector --latest 25 --sort rate --save /etc/pacman.d/mirrorlist" > /mnt/etc/cron.hourly/mirrorlist; chmod +x /mnt/etc/cron.hourly/mirrorlist`
+          `echo "#!/bin/bash\nreflector --latest 100 --sort rate --save /etc/pacman.d/mirrorlist" > /mnt/etc/cron.weekly/mirrorlist; chmod +x /mnt/etc/cron.weekly/mirrorlist`
           `echo "#!/bin/bash\npacman -Sy" > /mnt/etc/cron.weekly/pacman-sync; chmod +x /mnt/etc/cron.weekly/pacman-sync`
           `echo "#!/bin/bash\npacman -Syu --noconfirm" > /mnt/etc/cron.monthly/system-upgrade; chmod +x /mnt/etc/cron.monthly/system-upgrade`
           # enable cron jobs
@@ -234,8 +208,19 @@ module Warding
           `arch-chroot /mnt rm blackarch-keyring.pkg.tar.xz`
           `arch-chroot /mnt curl -s https://blackarch.org/blackarch-mirrorlist -o /etc/pacman.d/blackarch-mirrorlist`
           `echo "[blackarch]\nInclude = /etc/pacman.d/blackarch-mirrorlist" >> /mnt/etc/pacman.conf`
+          # setup wordlists
+          `arch-chroot /mnt mkdir -p /usr/share/wordlists`
+          `arch-chroot /mnt curl https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/raft-large-directories-lowercase.txt -o /usr/share/wordlists`
+          `arch-chroot /mnt curl https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/common.txt -o /usr/share/wordlists`
+          `arch-chroot /mnt curl https://github.com/danielmiessler/SecLists/raw/master/Passwords/Leaked-Databases/rockyou.txt.tar.gz -o /usr/share/wordlists`
+          # setup drivers
+          `arch-chroot /mnt pacman -S alsa-utils alsa-plugins alsa-lib --noc`
           # update package list
           `arch-chroot /mnt pacman -Syy`
+          # user creation
+          `arch-chroot /mnt useradd -m -g wheel -s /bin/zsh ward`
+          `arch-chroot /mnt sed -i 's/^#\s*\(%wheel\s*ALL=(ALL)\s*NOPASSWD:\s*ALL\)/\1/' /etc/sudoers`
+          `arch-chroot /mnt sudo -u ward cd ~ && git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si && yay -S yay`
           # check if on VM
           if `arch-chroot /mnt dmidecode -s system-manufacturer`.include?("VMware, Inc.")
             # install and enable VMware utils
@@ -244,12 +229,9 @@ module Warding
           end
         end
 
-        setup_usability
-
-        def setup_visuals(theme = "none")
-          if theme == "none"
-            nil
-          elsif theme == "plasma"
+        def setup_visuals(theme)
+          case theme
+          when "plasma"
             # install packages
             `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma-meta gtkmm konsole dolphin kmix sddm kvantum-qt5 --noc`
             # create conf dir
@@ -257,26 +239,43 @@ module Warding
             # fix theme
             `echo "[Theme]\nCurrent=breeze" > /mnt/etc/sddm.conf.d/theme.conf`
             # enable autologin
-            `echo "[Autologin]\nUser=root" > /mnt/etc/sddm.conf.d/login.conf`
+            `echo "[Autologin]\nUser=ward" > /mnt/etc/sddm.conf.d/login.conf`
             # enable sddm
             `arch-chroot /mnt systemctl enable sddm`
-          else
+          when "gnome"
             # install packages
-            `arch-chroot /mnt pacman -S xf86-video-intel gnome --noc`
+            `arch-chroot /mnt pacman -S xf86-video-intel gtkmm gnome --noc`
             # enable gdm
             `arch-chroot /mnt systemctl enable gdm`
+          when "i3"
+            # install packages
+            `arch-chroot /mnt pacman -S lightdm lightdm-gtk-greeter xorg-server xorg-apps xorg-xinit i3-wm --noc`
+            # enable lightdm
+            `arch-chroot /mnt systemctl enable lightdm`
+          else
+            nil
           end
         end
 
-        setup_visuals(data[:desktop_environment])
-
         def finish
-          # end
           `umount -R /mnt`
           `reboot`
         end
 
-        finish
+        def run
+          setup_mirrors if data[:update_mirrors]
+          data[:update_timezone] ? setup_timezone(data[:update_timezone]) : setup_timezone
+          setup_partitions(data[:system_settings][:boot_size])
+          data[:system_settings][:encrypted] ? setup_lvm(data[:system_settings][:swap_size], data[:system_settings][:encryption_settings][:encryption_key]) : setup_lvm(data[:system_settings][:swap_size])
+          setup_packages
+          data[:system_settings][:encrypted] ? setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password], true) : setup_chroot(data[:system_language], data[:keyboard_keymap], data[:root_password])
+          data[:system_settings][:encrypted] ? setup_bootloader(true) : setup_bootloader
+          setup_usability
+          setup_visuals(data[:desktop_environment])
+          finish
+        end
+
+        run
       end
     end
   end

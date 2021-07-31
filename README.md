@@ -31,6 +31,9 @@ warding
 * Refactor.
 * Suppress outputs.
 * Add extra checks.
+* Add user option.
+* Add AUR.
+* Update desktop environments.
 
 ## Contributing
 
