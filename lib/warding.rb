@@ -69,7 +69,7 @@ module Warding
       parsed_input
     end
 
-    def install(data, encrypted=false)
+    def install(data, encrypted = false)
       if @@prompt.yes?("Confirm settings and continue?")
 
         @@prompt.say("Installing, please wait...")
@@ -101,7 +101,7 @@ module Warding
           `
         end
 
-        def setup_lvm(swap_size, key=false)
+        def setup_lvm(swap_size, key = false)
           # setup encryption
           if key
             # create an encrypted volume
@@ -142,7 +142,7 @@ module Warding
           `genfstab -U /mnt >> /mnt/etc/fstab`
         end
 
-        def setup_chroot(lang, keymap, password, encrypted=false)
+        def setup_chroot(lang, keymap, password, encrypted = false)
           # set timezone
           `arch-chroot /mnt ln -sf /usr/share/zoneinfo/"$(curl -s https://ipapi.co/timezone)" /etc/localtime`
           # update clock
@@ -172,7 +172,7 @@ module Warding
           `arch-chroot /mnt pacman -S intel-ucode --noconfirm`
         end
 
-        def setup_bootloader(encrypted=false)
+        def setup_bootloader(encrypted = false)
           # setup systemd-boot
           `arch-chroot /mnt bootctl install`
           `echo "title Warding Linux
