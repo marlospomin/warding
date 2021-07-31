@@ -142,7 +142,7 @@ module Warding
           `genfstab -U /mnt >> /mnt/etc/fstab`
         end
 
-        def setup_chroot(lang, keymap, password, encrypted = false)
+        def setup_chroot(lang, keymap, password = "warding", encrypted = false)
           # set timezone
           `arch-chroot /mnt ln -sf /usr/share/zoneinfo/"$(curl -s https://ipapi.co/timezone)" /etc/localtime`
           # update clock
@@ -197,17 +197,6 @@ module Warding
           `arch-chroot /mnt systemctl enable cronie`
           # change default shell
           `arch-chroot /mnt chsh -s /usr/bin/zsh`
-          # setup blackarch's keyring
-          `arch-chroot /mnt curl -s -O https://blackarch.org/keyring/blackarch-keyring.pkg.tar.xz{,.sig}`
-          `arch-chroot /mnt gpg --keyserver hkp://pgp.mit.edu --recv-keys 4345771566D76038C7FEB43863EC0ADBEA87E4E3`
-          `arch-chroot /mnt gpg --keyserver-options no-auto-key-retrieve --with-fingerprint blackarch-keyring.pkg.tar.xz.sig`
-          `arch-chroot /mnt pacman-key --init`
-          `arch-chroot /mnt rm blackarch-keyring.pkg.tar.xz.sig`
-          `arch-chroot /mnt pacman --noconfirm -U blackarch-keyring.pkg.tar.xz`
-          `arch-chroot /mnt pacman-key --populate`
-          `arch-chroot /mnt rm blackarch-keyring.pkg.tar.xz`
-          `arch-chroot /mnt curl -s https://blackarch.org/blackarch-mirrorlist -o /etc/pacman.d/blackarch-mirrorlist`
-          `echo "[blackarch]\nInclude = /etc/pacman.d/blackarch-mirrorlist" >> /mnt/etc/pacman.conf`
           # setup wordlists
           `arch-chroot /mnt mkdir -p /usr/share/wordlists`
           `arch-chroot /mnt curl -s https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/raft-large-directories-lowercase.txt -o /usr/share/wordlists`
@@ -220,7 +209,8 @@ module Warding
           # user creation
           `arch-chroot /mnt useradd -m -g wheel -s /bin/zsh ward`
           `arch-chroot /mnt sed -i 's/^#\s*\(%wheel\s*ALL=(ALL)\s*NOPASSWD:\s*ALL\)/\1/' /etc/sudoers`
-          `arch-chroot /mnt sudo -u ward cd ~ && git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si && yay -S yay`
+          `arch-chroot /mnt sudo -u ward git clone https://aur.archlinux.org/yay.git; cd yay; makepkg -si; yay -S yay`
+          `arch-chroot /mnt sudo -u ward sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended`
           # check if on VM
           if `arch-chroot /mnt dmidecode -s system-manufacturer`.include?("VMware, Inc.")
             # install and enable VMware utils
@@ -239,7 +229,7 @@ module Warding
             # fix theme
             `echo "[Theme]\nCurrent=breeze" > /mnt/etc/sddm.conf.d/theme.conf`
             # enable autologin
-            `echo "[Autologin]\nUser=ward" > /mnt/etc/sddm.conf.d/login.conf`
+            `echo "[Autologin]\nUser=ward\nSession=plasma" > /mnt/etc/sddm.conf.d/login.conf`
             # enable sddm
             `arch-chroot /mnt systemctl enable sddm`
           when "gnome"
@@ -261,7 +251,7 @@ module Warding
           `umount -R /mnt`
           `reboot`
         end
-        
+
         setup_mirrors if data[:update_mirrors]
         data[:update_timezone] ? setup_timezone(data[:update_timezone]) : setup_timezone
         setup_partitions(data[:system_settings][:boot_size])
