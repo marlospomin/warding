@@ -50,7 +50,7 @@ module Warding
           key(:update_timezone).ask("Enter timezone:", required: true)
         end
 
-        key(:root_password).mask("Insert new root password:", required: true)
+        key(:root_password).mask("Insert new root password:", default: "warding")
 
         key(:system_settings) do
           key(:boot_size).slider("Boot drive partition size (MiB):", min: 512, max: 4096, default: 1024, step: 128)
