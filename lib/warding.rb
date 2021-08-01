@@ -137,7 +137,7 @@ module Warding
           # update packages list
           `pacman -Syy`
           # install base system
-          `pacstrap /mnt base base-devel linux linux-firmware linux-headers lvm2 mkinitcpio dmidecode reflector networkmanager go cronie man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
+          `pacstrap /mnt base base-devel linux linux-firmware linux-headers lvm2 mkinitcpio dmidecode smbclient reflector networkmanager go cronie man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
           # generate fstab
           `genfstab -U /mnt >> /mnt/etc/fstab`
         end
@@ -169,7 +169,7 @@ module Warding
           # recompile initramfs
           `arch-chroot /mnt mkinitcpio -P`
           # add intel microcode
-          `arch-chroot /mnt pacman -S intel-ucode --noconfirm`
+          `arch-chroot /mnt pacman -S amd-ucode --noconfirm`
         end
 
         def setup_bootloader(encrypted = false)
@@ -177,7 +177,7 @@ module Warding
           `arch-chroot /mnt bootctl install`
           `echo "title Warding Linux
           linux /vmlinuz-linux
-          initrd /intel-ucode.img
+          initrd /amd-ucode.img
           initrd /initramfs-linux.img" > /mnt/boot/loader/entries/warding.conf`
           if encrypted
             `echo "options cryptdevice=UUID=$(blkid -s UUID -o value /dev/sda2):cryptlvm:allow-discards root=/dev/vg0/root quiet rw" >> /mnt/boot/loader/entries/warding.conf`
@@ -207,8 +207,7 @@ module Warding
           # update package list
           `arch-chroot /mnt pacman -Syy`
           # user creation --fix
-          `arch-chroot /mnt useradd -m -g wheel -s /bin/zsh`
-          `sed -i 's/^#\s*\(%wheel\s*ALL=(ALL)\s*NOPASSWD:\s*ALL\)/\1/' /mnt/etc/sudoers`
+          `arch-chroot /mnt useradd -m -g wheel -s /bin/zsh ward`
           `sed -i '85 s/# %wheel ALL=(ALL) NOPASSWD: ALL/%wheel ALL=(ALL) NOPASSWD: ALL/g' /mnt/etc/sudoers`
           `arch-chroot /mnt sudo -u ward sh -c "cd /home/ward; git clone https://aur.archlinux.org/yay.git; cd yay; makepkg -si --noconfirm"`
           `arch-chroot /mnt sudo -u ward sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended`
@@ -224,7 +223,7 @@ module Warding
           case theme
           when "plasma"
             # install packages
-            `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma-meta gtkmm konsole dolphin kmix sddm kvantum-qt5 --noc -q`
+            `arch-chroot /mnt pacman -S xorg-server plasma-meta gtkmm konsole sddm kvantum-qt5 --noc -q`
             # create conf dir
             `mkdir -p /mnt/etc/sddm.conf.d`
             # fix theme
