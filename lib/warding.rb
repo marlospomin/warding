@@ -122,7 +122,7 @@ module Warding
           `lvcreate -L #{swap_size}Mib vg0 -n swap`
           `lvcreate -l 100%FREE vg0 -n root`
           # make and mount rootfs
-          `mkfs.ext4 /dev/vg0/root`
+          `mkfs.ext4 -q /dev/vg0/root`
           `mount /dev/vg0/root /mnt`
           # make and mount boot partition
           `mkfs.fat -F32 /dev/sda1`
@@ -137,7 +137,7 @@ module Warding
           # update packages list
           `pacman -Syy`
           # install base system
-          `pacstrap /mnt base base-devel linux linux-firmware linux-headers lvm2 mkinitcpio dmidecode reflector networkmanager cronie man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
+          `pacstrap /mnt base base-devel linux linux-firmware linux-headers lvm2 mkinitcpio dmidecode reflector networkmanager go cronie man-db nano vi fuse wget openbsd-netcat dhcpcd samba openssh openvpn unzip vim git zsh`
           # generate fstab
           `genfstab -U /mnt >> /mnt/etc/fstab`
         end
@@ -188,34 +188,35 @@ module Warding
 
         def setup_usability
           # enable internet
-          `arch-chroot /mnt systemctl enable NetworkManager`
+          `arch-chroot /mnt systemctl -q enable NetworkManager`
           # add cron jobs
           `echo "#!/bin/bash\nreflector --latest 100 --sort rate --save /etc/pacman.d/mirrorlist" > /mnt/etc/cron.weekly/mirrorlist; chmod +x /mnt/etc/cron.weekly/mirrorlist`
           `echo "#!/bin/bash\npacman -Sy" > /mnt/etc/cron.weekly/pacman-sync; chmod +x /mnt/etc/cron.weekly/pacman-sync`
           `echo "#!/bin/bash\npacman -Syu --noconfirm" > /mnt/etc/cron.monthly/system-upgrade; chmod +x /mnt/etc/cron.monthly/system-upgrade`
           # enable cron jobs
-          `arch-chroot /mnt systemctl enable cronie`
+          `arch-chroot /mnt systemctl -q enable cronie`
           # change default shell
           `arch-chroot /mnt chsh -s /usr/bin/zsh`
           # setup wordlists
           `arch-chroot /mnt mkdir -p /usr/share/wordlists`
-          `arch-chroot /mnt curl -s https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/raft-large-directories-lowercase.txt -o /usr/share/wordlists`
-          `arch-chroot /mnt curl -s https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/common.txt -o /usr/share/wordlists`
-          `arch-chroot /mnt curl -s https://github.com/danielmiessler/SecLists/raw/master/Passwords/Leaked-Databases/rockyou.txt.tar.gz -o /usr/share/wordlists`
+          `arch-chroot /mnt curl -s https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/raft-large-directories-lowercase.txt -O --output-dir /usr/share/wordlists`
+          `arch-chroot /mnt curl -s https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/common.txt -O --output-dir /usr/share/wordlists`
+          `arch-chroot /mnt curl -s https://github.com/danielmiessler/SecLists/raw/master/Passwords/Leaked-Databases/rockyou.txt.tar.gz -O --output-dir /usr/share/wordlists`
           # setup drivers
           `arch-chroot /mnt pacman -S alsa-utils alsa-plugins alsa-lib --noc`
           # update package list
           `arch-chroot /mnt pacman -Syy`
-          # user creation
-          `arch-chroot /mnt useradd -m -g wheel -s /bin/zsh ward`
-          `arch-chroot /mnt sed -i 's/^#\s*\(%wheel\s*ALL=(ALL)\s*NOPASSWD:\s*ALL\)/\1/' /etc/sudoers`
-          `arch-chroot /mnt sudo -u ward sh -c "git clone https://aur.archlinux.org/yay.git; cd yay; makepkg -si; yay -S yay"`
+          # user creation --fix
+          `arch-chroot /mnt useradd -m -g wheel -s /bin/zsh`
+          `sed -i 's/^#\s*\(%wheel\s*ALL=(ALL)\s*NOPASSWD:\s*ALL\)/\1/' /mnt/etc/sudoers`
+          `sed -i '85 s/# %wheel ALL=(ALL) NOPASSWD: ALL/%wheel ALL=(ALL) NOPASSWD: ALL/g' /mnt/etc/sudoers`
+          `arch-chroot /mnt sudo -u ward sh -c "cd /home/ward; git clone https://aur.archlinux.org/yay.git; cd yay; makepkg -si --noconfirm"`
           `arch-chroot /mnt sudo -u ward sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended`
           # check if on VM
           if `arch-chroot /mnt dmidecode -s system-manufacturer`.include?("VMware, Inc.")
             # install and enable VMware utils
             `arch-chroot /mnt pacman -S open-vm-tools --noconfirm`
-            `arch-chroot /mnt systemctl enable vmtoolsd`
+            `arch-chroot /mnt systemctl -q enable vmtoolsd`
           end
         end
 
@@ -223,7 +224,7 @@ module Warding
           case theme
           when "plasma"
             # install packages
-            `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma-meta gtkmm konsole dolphin kmix sddm kvantum-qt5 --noc`
+            `arch-chroot /mnt pacman -S xorg-server xf86-video-intel plasma-meta gtkmm konsole dolphin kmix sddm kvantum-qt5 --noc -q`
             # create conf dir
             `mkdir -p /mnt/etc/sddm.conf.d`
             # fix theme
@@ -231,17 +232,17 @@ module Warding
             # enable autologin
             `echo "[Autologin]\nUser=ward\nSession=plasma" > /mnt/etc/sddm.conf.d/autologin.conf`
             # enable sddm
-            `arch-chroot /mnt systemctl enable sddm`
+            `arch-chroot /mnt systemctl -q enable sddm`
           when "gnome"
             # install packages
             `arch-chroot /mnt pacman -S xf86-video-intel gtkmm gnome --noc`
             # enable gdm
-            `arch-chroot /mnt systemctl enable gdm`
+            `arch-chroot /mnt systemctl -q enable gdm`
           when "i3"
             # install packages
             `arch-chroot /mnt pacman -S lightdm lightdm-gtk-greeter xorg-server xorg-apps xorg-xinit i3-wm --noc`
             # enable lightdm
-            `arch-chroot /mnt systemctl enable lightdm`
+            `arch-chroot /mnt systemctl -q enable lightdm`
           else
             nil
           end
