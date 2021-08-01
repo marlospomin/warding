@@ -24,6 +24,14 @@ wget -qO- https://raw.githubusercontent.com/marlospomin/warding/master/debug/qui
 4. Run the binary executable `warding` and fill in the prompts.
 5. Enjoy.
 
+## Debug
+
+To install the latest version (debug) of warding follow the steps below:
+
+```bash
+wget -qO- https://raw.githubusercontent.com/marlospomin/warding/master/debug/debug.sh | sh
+```
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/marlospomin/warding.
