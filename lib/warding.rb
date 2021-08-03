@@ -234,7 +234,9 @@ module Warding
             `arch-chroot /mnt systemctl -q enable sddm`
           when "gnome"
             # install packages
-            `arch-chroot /mnt pacman -S xf86-video-intel gtkmm gnome --noc`
+            `arch-chroot /mnt pacman -S gtkmm gnome gnome-tweaks --noc`
+            # enable autologin
+            `echo "[daemon]\nAutomaticLogin=ward\nAutomaticLoginEnable=True" > /mnt/etc/gdm/custom.conf`
             # enable gdm
             `arch-chroot /mnt systemctl -q enable gdm`
           when "i3"
